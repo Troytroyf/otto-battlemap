@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Otto 作战地图</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+
+  :root {
+    --bg-deep: #080c12;
+    --grid-color: rgba(0, 200, 150, 0.055);
+    --accent-green: #00e5a0;
+    --accent-red: #ff4757;
+    --role-platform: #00e5a0;
+    --role-agent: #f5c518;
+    --role-sales: #00b4d8;
+    --role-gtm: #ff6b35;
+    --role-ecom: #c77dff;
+    --dim-supply: #00e5a0;
+    --dim-data: #00b4d8;
+    --dim-strategy: #f5c518;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg-deep);
+    font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--grid-color) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+    background-size: 56px 56px;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse 60% 60% at 50% 50%,
+      rgba(0, 229, 160, 0.04) 0%, transparent 70%);
+    z-index: 0;
+  }
+
+  #app {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1;
+  }
+
+  #svg-layer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  /* ── CENTER ── */
+  .center-node {
+    position: absolute;
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #0d2419 0%, #060f0a 100%);
+    border: 2px solid var(--accent-green);
+    box-shadow:
+      0 0 0 8px rgba(0,229,160,0.06),
+      0 0 32px rgba(0,229,160,0.28),
+      0 0 80px rgba(0,229,160,0.08),
+      inset 0 0 22px rgba(0,229,160,0.04);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    transform: translate(-50%, -50%);
+    animation: centerPulse 3.5s ease-in-out infinite;
+  }
+
+  @keyframes centerPulse {
+    0%,100% { box-shadow: 0 0 0 8px rgba(0,229,160,0.06), 0 0 32px rgba(0,229,160,0.28), 0 0 80px rgba(0,229,160,0.08), inset 0 0 22px rgba(0,229,160,0.04); }
+    50%      { box-shadow: 0 0 0 14px rgba(0,229,160,0.04), 0 0 52px rgba(0,229,160,0.36), 0 0 120px rgba(0,229,160,0.12), inset 0 0 30px rgba(0,229,160,0.07); }
+  }
+
+  .c-en {
+    font-family: 'Orbitron', monospace;
+    font-size: 22px; font-weight: 900;
+    color: var(--accent-green);
+    letter-spacing: 3px;
+    text-shadow: 0 0 12px rgba(0,229,160,0.6);
+  }
+  .c-zh { font-size: 12px; color: rgba(0,229,160,0.55); letter-spacing: 4px; margin-top: 5px; }
+  .c-sub { font-family:'Orbitron',monospace; font-size:8px; color:rgba(255,255,255,0.2); letter-spacing:2px; margin-top:3px; }
+
+  /* ── DIM NODES ── */
+  .dim-node {
+    position: absolute;
+    z-index: 8;
+    cursor: pointer;
+    transform: translate(-50%, -50%);
+  }
+
+  .dim-box {
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: 1.5px solid;
+    font-size: 13px; font-weight: 700; letter-spacing: 2px;
+    text-align: center;
+    background: rgba(8,12,18,0.95);
+    backdrop-filter: blur(6px);
+    transition: transform 0.22s;
+    position: relative; overflow: hidden;
+    white-space: nowrap;
+  }
+  .dim-box::after {
+    content:''; position:absolute; inset:0;
+    background: currentColor; opacity: 0.07; border-radius: 3px;
+  }
+  .dim-node:hover .dim-box { transform: scale(1.06); }
+  .dim-num { font-family:'Orbitron',monospace; font-size:9px; opacity:0.5; letter-spacing:1px; margin-bottom:3px; }
+
+  .dim-supply .dim-box { border-color:var(--dim-supply); color:var(--dim-supply); box-shadow:0 0 16px rgba(0,229,160,0.18); }
+  .dim-data   .dim-box { border-color:var(--dim-data);   color:var(--dim-data);   box-shadow:0 0 16px rgba(0,180,216,0.18); }
+  .dim-strategy .dim-box { border-color:var(--dim-strategy); color:var(--dim-strategy); box-shadow:0 0 16px rgba(245,197,24,0.18); }
+
+  /* ── ROLE CARDS ── */
+  .role-card {
+    position: absolute;
+    background: rgba(8,12,18,0.95);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 5px;
+    padding: 8px 11px;
+    width: 156px;
+    z-index: 7;
+    backdrop-filter: blur(8px);
+    transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
+    transform: translate(-50%, -50%);
+  }
+  .role-card:hover { transform: translate(-50%, -53%); z-index: 20; }
+
+  .role-tag {
+    display:inline-block; font-size:10px; font-weight:700;
+    letter-spacing:1px; padding:2px 7px; border-radius:2px;
+    margin-bottom:5px; font-family:'Orbitron',monospace;
+  }
+  .role-desc { font-size:11px; color:rgba(255,255,255,0.55); line-height:1.6; }
+
+  .role-platform { border-color:rgba(0,229,160,0.25); }
+  .role-platform .role-tag { background:rgba(0,229,160,0.12); color:var(--role-platform); }
+  .role-platform:hover { border-color:rgba(0,229,160,0.55); box-shadow:0 0 12px rgba(0,229,160,0.15); }
+
+  .role-agent { border-color:rgba(245,197,24,0.25); }
+  .role-agent .role-tag { background:rgba(245,197,24,0.12); color:var(--role-agent); }
+  .role-agent:hover { border-color:rgba(245,197,24,0.55); box-shadow:0 0 12px rgba(245,197,24,0.15); }
+
+  .role-sales { border-color:rgba(0,180,216,0.25); }
+  .role-sales .role-tag { background:rgba(0,180,216,0.12); color:var(--role-sales); }
+  .role-sales:hover { border-color:rgba(0,180,216,0.55); box-shadow:0 0 12px rgba(0,180,216,0.15); }
+
+  .role-gtm { border-color:rgba(255,107,53,0.25); }
+  .role-gtm .role-tag { background:rgba(255,107,53,0.12); color:var(--role-gtm); }
+  .role-gtm:hover { border-color:rgba(255,107,53,0.55); box-shadow:0 0 12px rgba(255,107,53,0.15); }
+
+  .role-ecom { border-color:rgba(199,125,255,0.25); }
+  .role-ecom .role-tag { background:rgba(199,125,255,0.12); color:var(--role-ecom); }
+  .role-ecom:hover { border-color:rgba(199,125,255,0.55); box-shadow:0 0 12px rgba(199,125,255,0.15); }
+
+  /* ── SVG ── */
+  .conn-supply  { stroke:rgba(0,229,160,0.2);  stroke-width:1.2; fill:none; }
+  .conn-data    { stroke:rgba(0,180,216,0.2);  stroke-width:1.2; fill:none; }
+  .conn-strategy{ stroke:rgba(245,197,24,0.2); stroke-width:1.2; fill:none; }
+
+  .flow-fwd { stroke:rgba(0,229,160,0.6); stroke-width:1.5; fill:none; stroke-dasharray:7 5; animation:dashFwd 1.8s linear infinite; }
+  .flow-rev { stroke:rgba(255,71,87,0.6);  stroke-width:1.5; fill:none; stroke-dasharray:7 5; animation:dashRev 1.8s linear infinite; }
+
+  @keyframes dashFwd { from{stroke-dashoffset:0} to{stroke-dashoffset:-48} }
+  @keyframes dashRev { from{stroke-dashoffset:0} to{stroke-dashoffset:48} }
+
+  .marker-fwd { fill:rgba(0,229,160,0.9); }
+  .marker-rev { fill:rgba(255,71,87,0.9); }
+
+  /* ── LEGEND ── */
+  .legend {
+    position:fixed; bottom:20px; left:20px; z-index:100;
+    background:rgba(8,12,18,0.9); border:1px solid rgba(0,229,160,0.12);
+    border-radius:6px; padding:13px 16px; backdrop-filter:blur(8px);
+  }
+  .legend-title { font-family:'Orbitron',monospace; font-size:8px; color:rgba(255,255,255,0.22); letter-spacing:2px; margin-bottom:9px; }
+  .legend-group { margin-bottom:9px; }
+  .legend-group-label { font-size:9px; color:rgba(255,255,255,0.22); letter-spacing:1px; margin-bottom:5px; }
+  .legend-item { display:flex; align-items:center; gap:8px; font-size:11px; color:rgba(255,255,255,0.48); margin-bottom:3px; }
+  .legend-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+  .legend-line { width:26px; height:2px; flex-shrink:0; border-radius:1px; }
+
+  /* ── HEADER ── */
+  .map-header {
+    position:fixed; top:20px; left:50%; transform:translateX(-50%);
+    z-index:100; text-align:center;
+  }
+  .map-header h1 {
+    font-family:'Orbitron',monospace; font-size:11px;
+    color:rgba(0,229,160,0.32); letter-spacing:7px; font-weight:400;
+  }
+
+  /* corners */
+  .corner { position:fixed; width:34px; height:34px; z-index:100; opacity:0.22; }
+  .corner-tl { top:13px; left:13px; border-top:1px solid var(--accent-green); border-left:1px solid var(--accent-green); }
+  .corner-tr { top:13px; right:13px; border-top:1px solid var(--accent-green); border-right:1px solid var(--accent-green); }
+  .corner-bl { bottom:13px; left:13px; border-bottom:1px solid var(--accent-green); border-left:1px solid var(--accent-green); }
+  .corner-br { bottom:13px; right:13px; border-bottom:1px solid var(--accent-green); border-right:1px solid var(--accent-green); }
+
+  /* scanline */
+  .scanline { position:fixed; left:0; width:100%; height:3px; background:linear-gradient(transparent,rgba(0,229,160,0.022),transparent); animation:scan 10s linear infinite; pointer-events:none; z-index:300; }
+  @keyframes scan { 0%{top:-3px} 100%{top:100%} }
+
+  /* TOOLTIP */
+  .tooltip {
+    position:fixed; background:rgba(8,12,18,0.98); border:1px solid rgba(0,229,160,0.28);
+    border-radius:7px; padding:13px 17px; max-width:300px; z-index:1000;
+    opacity:0; pointer-events:none; transition:opacity 0.16s;
+    font-size:12px; line-height:1.7; color:rgba(255,255,255,0.62);
+    box-shadow:0 0 28px rgba(0,229,160,0.08);
+  }
+  .tooltip.show { opacity:1; }
+  .tt-title { font-family:'Orbitron',monospace; font-size:11px; color:var(--accent-green); letter-spacing:1px; margin-bottom:9px; font-weight:700; }
+  .tt-section { margin-bottom:8px; }
+  .tt-label { font-size:9px; color:rgba(255,255,255,0.26); letter-spacing:1.5px; margin-bottom:4px; }
+  .tt-role { margin-bottom:3px; }
+  .tt-role strong { color:rgba(255,255,255,0.85); font-weight:500; }
+  .badge { display:inline-block; font-size:9px; padding:1px 7px; border-radius:2px; margin-right:4px; font-weight:600; }
+  .badge-fwd { background:rgba(0,229,160,0.15); color:var(--accent-green); }
+  .badge-rev { background:rgba(255,71,87,0.15); color:var(--accent-red); }
+
+  .hint { position:fixed; bottom:20px; right:20px; font-size:10px; color:rgba(255,255,255,0.16); letter-spacing:1px; z-index:100; }
+</style>
+</head>
+<body>
+
+<div class="scanline"></div>
+<div class="corner corner-tl"></div>
+<div class="corner corner-tr"></div>
+<div class="corner corner-bl"></div>
+<div class="corner corner-br"></div>
+
+<div class="map-header"><h1>OTTO · BATTLE MAP · 作战地图</h1></div>
+<div class="hint">点击维度节点查看详情</div>
+
+<div id="app">
+  <svg id="svg-layer" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="mf" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+        <polygon points="0 0, 7 3.5, 0 7" class="marker-fwd"/>
+      </marker>
+      <marker id="mr" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+        <polygon points="0 0, 7 3.5, 0 7" class="marker-rev"/>
+      </marker>
+    </defs>
+  </svg>
+
+  <!-- CENTER -->
+  <div class="center-node" id="center">
+    <div class="c-en">OTTO</div>
+    <div class="c-zh">作战地图</div>
+    <div class="c-sub">BATTLE MAP</div>
+  </div>
+
+  <!-- DIM nodes (positions set by JS) -->
+  <div class="dim-node dim-supply" id="dim-supply" onclick="showTip(event,'supply')">
+    <div class="dim-box"><div class="dim-num">01 · SUPPLY</div>货&nbsp;&nbsp;源</div>
+  </div>
+  <div class="dim-node dim-data" id="dim-data" onclick="showTip(event,'data')">
+    <div class="dim-box">
+      <div class="dim-num">02 · MONITOR</div>数据监控
+      <div style="font-size:10px;opacity:0.65;margin-top:2px;">销量 / 广告</div>
+    </div>
+  </div>
+  <div class="dim-node dim-strategy" id="dim-strategy" onclick="showTip(event,'strategy')">
+    <div class="dim-box"><div class="dim-num">03 · STRATEGY</div>策略优化</div>
+  </div>
+
+  <!-- Role cards (positions set by JS) -->
+  <!-- 货源 -->
+  <div class="role-card role-platform" id="rs-platform">
+    <span class="role-tag">平台</span>
+    <div class="role-desc">根据进销存报未来三月预测</div>
+  </div>
+  <div class="role-card role-agent" id="rs-agent">
+    <span class="role-tag">代理</span>
+    <div class="role-desc">承接资金物流平台，确保货款</div>
+  </div>
+  <div class="role-card role-sales" id="rs-sales">
+    <span class="role-tag">DJI 销售</span>
+    <div class="role-desc">与 GTM / 产销锁预测中的货量</div>
+  </div>
+  <div class="role-card role-gtm" id="rs-gtm">
+    <span class="role-tag">GTM</span>
+    <div class="role-desc">产能预警，判断断货节奏，提前与销售沟通</div>
+  </div>
+
+  <!-- 数据监控 -->
+  <div class="role-card role-platform" id="rd-platform">
+    <span class="role-tag">平台</span>
+    <div class="role-desc">两周为维度提供销量 / 广告数据</div>
+  </div>
+  <div class="role-card role-ecom" id="rd-ecom">
+    <span class="role-tag">电商运营</span>
+    <div class="role-desc">数据分析，返回优化建议</div>
+  </div>
+  <div class="role-card role-agent" id="rd-agent">
+    <span class="role-tag">代理</span>
+    <div class="role-desc">推动平台落地优化建议</div>
+  </div>
+
+  <!-- 策略优化 -->
+  <div class="role-card role-platform" id="rg-platform">
+    <span class="role-tag">平台</span>
+    <div class="role-desc">提供类目竞争态势，对比竞对参数差距（广告 / 销量 / 流量）</div>
+  </div>
+  <div class="role-card role-ecom" id="rg-ecom">
+    <span class="role-tag">电商运营</span>
+    <div class="role-desc">优化价促、打法，返回给平台</div>
+  </div>
+  <div class="role-card role-agent" id="rg-agent">
+    <span class="role-tag">代理</span>
+    <div class="role-desc">跟进平台落地</div>
+  </div>
+</div>
+
+<!-- Legend -->
+<div class="legend">
+  <div class="legend-title">LEGEND · 图例</div>
+  <div class="legend-group">
+    <div class="legend-group-label">角色</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--role-platform)"></div>平台</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--role-agent)"></div>代理</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--role-sales)"></div>DJI 销售</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--role-gtm)"></div>GTM</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--role-ecom)"></div>电商运营</div>
+  </div>
+  <div class="legend-group">
+    <div class="legend-group-label">流程</div>
+    <div class="legend-item">
+      <div class="legend-line" style="background:linear-gradient(90deg,rgba(0,229,160,0.3),var(--accent-green))"></div>正向流程
+    </div>
+    <div class="legend-item">
+      <div class="legend-line" style="background:linear-gradient(90deg,rgba(255,71,87,0.3),var(--accent-red))"></div>反向流程
+    </div>
+  </div>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+/* ═══════════════════════════════════════════════
+   LAYOUT ENGINE — all positions in px from center
+   ═══════════════════════════════════════════════ */
+
+// Scale factor: all offsets are authored for a 1440×900 canvas.
+// On other sizes we scale proportionally, clamped so it never overflows.
+function getScale() {
+  const sw = window.innerWidth  / 1440;
+  const sh = window.innerHeight / 900;
+  return Math.min(sw, sh, 1.1); // don't scale up beyond 110%
+}
+
+// All positions are [dx, dy] from screen center (px, at scale=1)
+const LAYOUT = {
+  // dim nodes
+  'dim-supply':   { dx: -310, dy: -210 },  // upper-left
+  'dim-data':     { dx:  310, dy:  -20 },  // right-center
+  'dim-strategy': { dx: -310, dy:  215 },  // lower-left
+
+  // 货源 role cards  (cluster around dim-supply)
+  'rs-platform':  { dx: -490, dy: -295 },
+  'rs-agent':     { dx: -490, dy: -170 },
+  'rs-sales':     { dx: -185, dy: -310 },
+  'rs-gtm':       { dx:  -10, dy: -310 },
+
+  // 数据监控 role cards (cluster around dim-data, stacked right)
+  'rd-platform':  { dx:  490, dy: -200 },
+  'rd-ecom':      { dx:  490, dy:  -55 },
+  'rd-agent':     { dx:  490, dy:   90 },
+
+  // 策略优化 role cards (cluster around dim-strategy)
+  'rg-platform':  { dx: -490, dy:  130 },
+  'rg-ecom':      { dx: -490, dy:  265 },
+  'rg-agent':     { dx: -220, dy:  330 },
+};
+
+function place() {
+  const cx = window.innerWidth  / 2;
+  const cy = window.innerHeight / 2;
+  const s  = getScale();
+
+  // Center node
+  const cen = document.getElementById('center');
+  cen.style.left = cx + 'px';
+  cen.style.top  = cy + 'px';
+
+  // All other nodes
+  for (const [id, pos] of Object.entries(LAYOUT)) {
+    const el = document.getElementById(id);
+    if (!el) continue;
+    el.style.left = (cx + pos.dx * s) + 'px';
+    el.style.top  = (cy + pos.dy * s) + 'px';
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   SVG drawing
+   ═══════════════════════════════════════════════ */
+function rc(id) {
+  const el = document.getElementById(id);
+  return el ? el.getBoundingClientRect() : null;
+}
+function mid(r) { return { x: r.left + r.width/2, y: r.top + r.height/2 }; }
+
+function addPath(d, cls, markerId) {
+  const svg = document.getElementById('svg-layer');
+  const p = document.createElementNS('http://www.w3.org/2000/svg','path');
+  p.setAttribute('d', d);
+  p.setAttribute('class', cls);
+  if (markerId) p.setAttribute('marker-end', `url(#${markerId})`);
+  svg.appendChild(p);
+}
+
+function addLine(x1,y1,x2,y2,cls) {
+  const svg = document.getElementById('svg-layer');
+  const l = document.createElementNS('http://www.w3.org/2000/svg','line');
+  l.setAttribute('x1',x1); l.setAttribute('y1',y1);
+  l.setAttribute('x2',x2); l.setAttribute('y2',y2);
+  l.setAttribute('class',cls);
+  svg.appendChild(l);
+}
+
+function addText(x,y,txt,color) {
+  const svg = document.getElementById('svg-layer');
+  const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+  t.setAttribute('x',x); t.setAttribute('y',y);
+  t.setAttribute('fill', color||'rgba(255,255,255,0.22)');
+  t.setAttribute('font-size','9');
+  t.setAttribute('font-family','Noto Sans SC,sans-serif');
+  t.setAttribute('text-anchor','middle');
+  t.setAttribute('letter-spacing','1');
+  t.textContent = txt;
+  svg.appendChild(t);
+}
+
+// Cubic bezier from (x1,y1) to (x2,y2)
+function curve(x1,y1,x2,y2,cls,marker) {
+  const dx = (x2-x1)*0.42;
+  addPath(`M${x1},${y1} C${x1+dx},${y1} ${x2-dx},${y2} ${x2},${y2}`, cls, marker);
+}
+
+// Dim-to-center connector: line from center circle edge to dim node edge
+function dimConnector(dimId, connCls) {
+  const cr = rc('center'), dr = rc(dimId);
+  if (!cr||!dr) return;
+  const cm = mid(cr), dm = mid(dr);
+  const dx = dm.x-cm.x, dy = dm.y-cm.y, len = Math.hypot(dx,dy);
+  const r = 70; // center radius in px
+  addLine(cm.x+dx/len*r, cm.y+dy/len*r, dm.x-dx/len*26, dm.y-dy/len*14, connCls);
+}
+
+// Dim-to-role connector
+function dimRole(dimId, roleId, connCls) {
+  const dr = rc(dimId), rr = rc(roleId);
+  if (!dr||!rr) return;
+  const dm = mid(dr), rm = mid(rr);
+  addLine(dm.x, dm.y, rm.x, rm.y, connCls);
+}
+
+function draw() {
+  const svg = document.getElementById('svg-layer');
+  [...svg.children].filter(c=>c.tagName!=='defs').forEach(k=>k.remove());
+
+  /* ── center → dims ── */
+  dimConnector('dim-supply',   'conn-supply');
+  dimConnector('dim-data',     'conn-data');
+  dimConnector('dim-strategy', 'conn-strategy');
+
+  /* ══ 货源 ══ */
+  dimRole('dim-supply','rs-platform','conn-supply');
+  dimRole('dim-supply','rs-agent',   'conn-supply');
+  dimRole('dim-supply','rs-sales',   'conn-supply');
+  dimRole('dim-supply','rs-gtm',     'conn-supply');
+
+  // Fwd: Platform → Sales
+  let r1=rc('rs-platform'), r2=rc('rs-sales');
+  if(r1&&r2) curve(r1.right, mid(r1).y, r2.left, mid(r2).y, 'flow-fwd','mf');
+
+  // Fwd: Sales → GTM
+  r1=rc('rs-sales'); r2=rc('rs-gtm');
+  if(r1&&r2) curve(r1.right, mid(r1).y, r2.left, mid(r2).y, 'flow-fwd','mf');
+
+  // Rev: GTM → Agent (断货风险)
+  r1=rc('rs-gtm'); r2=rc('rs-agent');
+  if(r1&&r2) {
+    const p1x=r1.left, p1y=r1.bottom+6, p2x=r2.right, p2y=mid(r2).y;
+    addPath(`M${p1x},${p1y} C${p1x},${p1y+50} ${p2x+50},${p2y} ${p2x},${p2y}`,'flow-rev','mr');
+  }
+
+  /* ══ 数据监控 ══ */
+  dimRole('dim-data','rd-platform','conn-data');
+  dimRole('dim-data','rd-ecom',   'conn-data');
+  dimRole('dim-data','rd-agent',  'conn-data');
+
+  // Fwd: Platform → Ecom (vertical left edge)
+  r1=rc('rd-platform'); r2=rc('rd-ecom');
+  if(r1&&r2) {
+    const x=r1.left-10;
+    addPath(`M${x},${r1.bottom} L${x},${r2.top}`,'flow-fwd','mf');
+  }
+  // Fwd: Ecom → Agent
+  r1=rc('rd-ecom'); r2=rc('rd-agent');
+  if(r1&&r2) {
+    const x=r1.left-10;
+    addPath(`M${x},${r1.bottom} L${x},${r2.top}`,'flow-fwd','mf');
+  }
+  // Rev: Agent → Platform (right side loop — 闭环)
+  r1=rc('rd-agent'); r2=rc('rd-platform');
+  if(r1&&r2) {
+    const x1=r1.right+10, y1=mid(r1).y, x2=r2.right+10, y2=mid(r2).y;
+    addPath(`M${x1},${y1} C${x1+34},${y1} ${x2+34},${y2} ${x2},${y2}`,'flow-rev','mr');
+    addText(x1+42, (y1+y2)/2, '闭环','rgba(255,71,87,0.38)');
+  }
+
+  /* ══ 策略优化 ══ */
+  dimRole('dim-strategy','rg-platform','conn-strategy');
+  dimRole('dim-strategy','rg-ecom',   'conn-strategy');
+  dimRole('dim-strategy','rg-agent',  'conn-strategy');
+
+  // Fwd: Platform → Ecom (right edge, downward)
+  r1=rc('rg-platform'); r2=rc('rg-ecom');
+  if(r1&&r2) {
+    const x=r1.right+10;
+    addPath(`M${x},${r1.bottom} L${x},${r2.top}`,'flow-fwd','mf');
+  }
+  // Rev: Ecom → Platform (left side loop)
+  r1=rc('rg-ecom'); r2=rc('rg-platform');
+  if(r1&&r2) {
+    const x1=r1.left-10, y1=mid(r1).y, x2=r2.left-10, y2=mid(r2).y;
+    addPath(`M${x1},${y1} C${x1-34},${y1} ${x2-34},${y2} ${x2},${y2}`,'flow-rev','mr');
+  }
+  // Fwd: Ecom → Agent
+  r1=rc('rg-ecom'); r2=rc('rg-agent');
+  if(r1&&r2) curve(mid(r1).x, r1.bottom, mid(r2).x, r2.top, 'flow-fwd','mf');
+}
+
+/* ═══════════════════════════════════════════════
+   TOOLTIP
+   ═══════════════════════════════════════════════ */
+const DATA = {
+  supply: {
+    title: '01 · 货源管理',
+    roles: [
+      { cls:'role-platform', name:'平台',     desc:'根据进销存报未来三月预测' },
+      { cls:'role-agent',    name:'代理',     desc:'承接资金物流平台，确保货款' },
+      { cls:'role-sales',    name:'DJI 销售', desc:'与 GTM / 产销锁预测中的货量' },
+      { cls:'role-gtm',      name:'GTM',      desc:'与产销根据 Otto 货量进行产能预警，判断断货节奏，提前与销售沟通' },
+    ],
+    flows: [
+      { type:'fwd', text:'代理提报 → 销售/电商运营传达 → GTM 与产销产能对接' },
+      { type:'rev', text:'GTM 根据预测与产能结果判断断货风险 → 传达电商 & 销售' },
+    ]
+  },
+  data: {
+    title: '02 · 数据监控（销量 / 广告）',
+    roles: [
+      { cls:'role-platform', name:'平台',    desc:'两周为维度提供销量 / 广告数据' },
+      { cls:'role-ecom',     name:'电商运营', desc:'数据分析，返回优化建议' },
+      { cls:'role-agent',    name:'代理',    desc:'推动平台落地优化建议' },
+    ],
+    flows: [
+      { type:'fwd', text:'平台发送原数据 → 电商分析 → 销售跟踪落地 → 平台执行 → 闭环' },
+    ]
+  },
+  strategy: {
+    title: '03 · 策略优化',
+    roles: [
+      { cls:'role-platform', name:'平台',    desc:'提供当前类目竞争态势，对比竞争对手参数差距（广告 / 销量 / 流量）' },
+      { cls:'role-ecom',     name:'电商运营', desc:'优化价促、打法，返回给平台' },
+      { cls:'role-agent',    name:'代理',    desc:'跟进平台落地' },
+    ],
+    flows: [
+      { type:'fwd', text:'平台提供数据 → 电商提供解决方案 → 代理跟进落地' },
+      { type:'rev', text:'电商优化方案反向输出给平台执行落地' },
+    ]
+  }
+};
+
+const TAG_COLOR = {
+  'role-platform':'var(--role-platform)',
+  'role-agent':'var(--role-agent)',
+  'role-sales':'var(--role-sales)',
+  'role-gtm':'var(--role-gtm)',
+  'role-ecom':'var(--role-ecom)',
+};
+
+function showTip(e, key) {
+  e.stopPropagation();
+  const d = DATA[key];
+  const tip = document.getElementById('tooltip');
+  const rolesHtml = d.roles.map(r=>`<div class="tt-role"><strong style="color:${TAG_COLOR[r.cls]||'#fff'}">${r.name}</strong>：${r.desc}</div>`).join('');
+  const flowsHtml = d.flows.map(f=>`<div style="margin-bottom:5px"><span class="badge badge-${f.type}">${f.type==='fwd'?'▶ 正向':'◀ 反向'}</span>${f.text}</div>`).join('');
+  tip.innerHTML = `
+    <div class="tt-title">${d.title}</div>
+    <div class="tt-section"><div class="tt-label">角色职责</div>${rolesHtml}</div>
+    <div class="tt-section"><div class="tt-label">流程</div>${flowsHtml}</div>
+  `;
+  const x = e.clientX + 18, y = e.clientY - 12;
+  tip.style.left = Math.min(x, window.innerWidth-320)+'px';
+  tip.style.top  = Math.max(10, Math.min(y, window.innerHeight-250))+'px';
+  tip.classList.add('show');
+}
+document.addEventListener('click', ()=>document.getElementById('tooltip').classList.remove('show'));
+
+/* ═══════════════════════════════════════════════
+   INIT & RESIZE
+   ═══════════════════════════════════════════════ */
+function render() {
+  place();
+  // wait one frame for layout to settle, then draw SVG
+  requestAnimationFrame(draw);
+}
+
+window.addEventListener('load', ()=>{ render(); setTimeout(draw,150); });
+window.addEventListener('resize', render);
+</script>
+</body>
+</html>
