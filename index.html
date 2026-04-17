@@ -41,7 +41,7 @@ body::before{
 
 #stage {
   position:relative;
-  width:1600px; height:960px;
+  width:1600px; height:940px;
   flex-shrink:0;
   transform-origin:top left;
 }
@@ -375,55 +375,56 @@ body::before{
      Bottom      → D8 timeline
 ═══════════════════════════════════════════════════ */
 
-const CX = 800, CY = 388;
+const CX = 800, CY = 400;
 
 // Each entry: [left, top]  (center of element on 1600×960 canvas)
+// All clusters pulled ~30% closer to center vs previous version
 const POS = {
   ctr:  [CX, CY],
 
   // ── D1 货源  upper-left cluster ──
-  d1:   [490, 200],   // dim node
-  d1r1: [310, 118],   // 平台
-  d1r2: [310, 218],   // 代理
-  d1r3: [530, 105],   // DJI销售
-  d1r4: [690, 105],   // GTM
+  d1:   [580, 248],   // dim node  (was 490,200 → closer)
+  d1r1: [390, 158],   // 平台
+  d1r2: [390, 258],   // 代理
+  d1r3: [600, 145],   // DJI销售
+  d1r4: [750, 145],   // GTM
 
   // ── D2 数据监控  right cluster ──
-  d2:   [1110, 310],  // dim node
-  d2r1: [1310, 210],  // 平台
-  d2r2: [1310, 330],  // 电商
-  d2r3: [1310, 448],  // 代理
+  d2:   [1020, 320],  // dim node  (was 1110,310)
+  d2r1: [1210, 228],  // 平台
+  d2r2: [1210, 338],  // 电商
+  d2r3: [1210, 446],  // 代理
 
   // ── D3 策略优化  lower-right cluster ──
-  d3:   [1060, 530],  // dim node
-  d3r1: [1300, 530],  // 平台
-  d3r2: [1300, 636],  // 电商
-  d3r3: [1300, 742],  // 代理  — but check against timeline
+  d3:   [980, 510],   // dim node  (was 1060,530)
+  d3r1: [1200, 498],  // 平台
+  d3r2: [1200, 600],  // 电商
+  d3r3: [1200, 700],  // 代理
 
   // ── D4 周会机制  upper-right cluster ──
-  d4:   [1060, 185],  // dim node
-  d4r1: [1240, 108],  // GTM+电商
-  d4r2: [1390, 108],  // 销售
-  d4r3: [1315, 220],  // GTM+电商+销售
+  d4:   [980, 222],   // dim node  (was 1060,185)
+  d4r1: [1160, 138],  // GTM+电商
+  d4r2: [1330, 138],  // 销售
+  d4r3: [1245, 248],  // GTM+电商+销售
 
   // ── D5 日常巡检  left cluster ──
-  d5:   [490, 530],   // dim node
-  d5r1: [295, 480],   // 电商
-  d5r2: [295, 576],   // 销售
+  d5:   [580, 510],   // dim node  (was 490,530)
+  d5r1: [375, 462],   // 电商
+  d5r2: [375, 558],   // 销售
 
   // ── D6 大促日历  lower-left cluster ──
-  d6:   [490, 680],   // dim node
-  d6r1: [295, 680],   // 平台
+  d6:   [580, 648],   // dim node  (was 490,680)
+  d6r1: [375, 648],   // 平台
 
   // ── D7 年框敲定  top-center cluster ──
-  d7:   [800, 148],   // dim node
-  d7r1: [615, 68],    // GTM+MKT
-  d7r2: [800, 55],    // 平台
-  d7r3: [985, 68],    // 电商+MKT+代理
+  d7:   [800, 188],   // dim node  (was 800,148)
+  d7r1: [628, 102],   // GTM+MKT
+  d7r2: [800,  92],   // 平台
+  d7r3: [972, 102],   // 电商+MKT+代理
 
   // ── D8 组织/节奏  bottom ──
-  d8h:  [CX, 790],    // dim8 header
-  tl:   [CX, 870],    // timeline center
+  d8h:  [CX, 770],    // dim8 header  (was 790)
+  tl:   [CX, 850],    // timeline center (was 870)
 };
 
 /* Place all elements */
@@ -573,7 +574,7 @@ function draw() {
 ══════════════════════════════ */
 function scaleStage() {
   const stage = document.getElementById('stage');
-  const sw = 1600, sh = 960;
+  const sw = 1600, sh = 940;
   const vw = window.innerWidth, vh = window.innerHeight;
   const scale = Math.min(vw/sw, vh/sh);
   stage.style.transform = `scale(${scale})`;
