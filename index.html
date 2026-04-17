@@ -5,639 +5,768 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Otto 作战地图</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
 
-  :root {
-    --bg-deep: #080c12;
-    --grid-color: rgba(0, 200, 150, 0.055);
-    --accent-green: #00e5a0;
-    --accent-red: #ff4757;
-    --role-platform: #00e5a0;
-    --role-agent: #f5c518;
-    --role-sales: #00b4d8;
-    --role-gtm: #ff6b35;
-    --role-ecom: #c77dff;
-    --dim-supply: #00e5a0;
-    --dim-data: #00b4d8;
-    --dim-strategy: #f5c518;
-  }
+:root {
+  --bg: #070b10;
+  --grid: rgba(0,210,150,0.05);
+  --green:  #00e5a0;
+  --blue:   #00b4d8;
+  --gold:   #f5c518;
+  --orange: #ff6b35;
+  --purple: #c77dff;
+  --red:    #ff4757;
+  --pink:   #ff6eb4;
+  --teal:   #00d4c8;
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  /* dim colors — one per dimension */
+  --c1: #00e5a0; /* 货源 */
+  --c2: #00b4d8; /* 数据监控 */
+  --c3: #f5c518; /* 策略优化 */
+  --c4: #ff6b35; /* 周会机制 */
+  --c5: #c77dff; /* 日常巡检 */
+  --c6: #ff6eb4; /* 大促日历 */
+  --c7: #00d4c8; /* 年框敲定 */
+  --c8: #a8e063; /* 组织/节奏 */
 
-  body {
-    background: var(--bg-deep);
-    font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-    overflow: hidden;
-    width: 100vw;
-    height: 100vh;
-  }
+  /* role colors */
+  --r-platform: #00e5a0;
+  --r-agent:    #f5c518;
+  --r-sales:    #00b4d8;
+  --r-gtm:      #ff6b35;
+  --r-ecom:     #c77dff;
+  --r-mkt:      #ff6eb4;
+}
 
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      linear-gradient(var(--grid-color) 1px, transparent 1px),
-      linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
-    background-size: 56px 56px;
-    z-index: 0;
-  }
+* { margin:0; padding:0; box-sizing:border-box; }
 
-  body::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background: radial-gradient(ellipse 60% 60% at 50% 50%,
-      rgba(0, 229, 160, 0.04) 0%, transparent 70%);
-    z-index: 0;
-  }
+body {
+  background: var(--bg);
+  font-family: 'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
 
-  #app {
-    position: relative;
-    width: 100vw;
-    height: 100vh;
-    z-index: 1;
-  }
+body::before {
+  content:''; position:fixed; inset:0;
+  background-image: linear-gradient(var(--grid) 1px,transparent 1px), linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size: 52px 52px; z-index:0;
+}
+body::after {
+  content:''; position:fixed; inset:0;
+  background: radial-gradient(ellipse 55% 55% at 50% 46%, rgba(0,229,160,0.04) 0%, transparent 70%);
+  z-index:0;
+}
 
-  #svg-layer {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 2;
-  }
+#canvas {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1;
+}
 
-  /* ── CENTER ── */
-  .center-node {
-    position: absolute;
-    width: 140px;
-    height: 140px;
-    border-radius: 50%;
-    background: radial-gradient(circle, #0d2419 0%, #060f0a 100%);
-    border: 2px solid var(--accent-green);
-    box-shadow:
-      0 0 0 8px rgba(0,229,160,0.06),
-      0 0 32px rgba(0,229,160,0.28),
-      0 0 80px rgba(0,229,160,0.08),
-      inset 0 0 22px rgba(0,229,160,0.04);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: 10;
-    transform: translate(-50%, -50%);
-    animation: centerPulse 3.5s ease-in-out infinite;
-  }
+svg#lines {
+  position: absolute;
+  inset: 0; width:100%; height:100%;
+  pointer-events: none;
+  z-index: 2;
+}
 
-  @keyframes centerPulse {
-    0%,100% { box-shadow: 0 0 0 8px rgba(0,229,160,0.06), 0 0 32px rgba(0,229,160,0.28), 0 0 80px rgba(0,229,160,0.08), inset 0 0 22px rgba(0,229,160,0.04); }
-    50%      { box-shadow: 0 0 0 14px rgba(0,229,160,0.04), 0 0 52px rgba(0,229,160,0.36), 0 0 120px rgba(0,229,160,0.12), inset 0 0 30px rgba(0,229,160,0.07); }
-  }
+/* ── HEADER ── */
+.hdr {
+  position: fixed; top:18px; left:50%; transform:translateX(-50%);
+  z-index:200; text-align:center;
+  font-family:'Orbitron',monospace; font-size:11px; font-weight:400;
+  color:rgba(0,229,160,0.32); letter-spacing:7px;
+}
 
-  .c-en {
-    font-family: 'Orbitron', monospace;
-    font-size: 22px; font-weight: 900;
-    color: var(--accent-green);
-    letter-spacing: 3px;
-    text-shadow: 0 0 12px rgba(0,229,160,0.6);
-  }
-  .c-zh { font-size: 12px; color: rgba(0,229,160,0.55); letter-spacing: 4px; margin-top: 5px; }
-  .c-sub { font-family:'Orbitron',monospace; font-size:8px; color:rgba(255,255,255,0.2); letter-spacing:2px; margin-top:3px; }
+/* ── CORNERS ── */
+.corner { position:fixed; width:32px; height:32px; z-index:200; opacity:0.2; }
+.corner-tl{top:12px;left:12px;border-top:1px solid var(--green);border-left:1px solid var(--green);}
+.corner-tr{top:12px;right:12px;border-top:1px solid var(--green);border-right:1px solid var(--green);}
+.corner-bl{bottom:12px;left:12px;border-bottom:1px solid var(--green);border-left:1px solid var(--green);}
+.corner-br{bottom:12px;right:12px;border-bottom:1px solid var(--green);border-right:1px solid var(--green);}
 
-  /* ── DIM NODES ── */
-  .dim-node {
-    position: absolute;
-    z-index: 8;
-    cursor: pointer;
-    transform: translate(-50%, -50%);
-  }
+/* ── SCANLINE ── */
+.scan { position:fixed;left:0;width:100%;height:2px;background:linear-gradient(transparent,rgba(0,229,160,0.02),transparent);animation:scan 12s linear infinite;pointer-events:none;z-index:300; }
+@keyframes scan{0%{top:-2px}100%{top:100%}}
 
-  .dim-box {
-    padding: 8px 16px;
-    border-radius: 4px;
-    border: 1.5px solid;
-    font-size: 13px; font-weight: 700; letter-spacing: 2px;
-    text-align: center;
-    background: rgba(8,12,18,0.95);
-    backdrop-filter: blur(6px);
-    transition: transform 0.22s;
-    position: relative; overflow: hidden;
-    white-space: nowrap;
-  }
-  .dim-box::after {
-    content:''; position:absolute; inset:0;
-    background: currentColor; opacity: 0.07; border-radius: 3px;
-  }
-  .dim-node:hover .dim-box { transform: scale(1.06); }
-  .dim-num { font-family:'Orbitron',monospace; font-size:9px; opacity:0.5; letter-spacing:1px; margin-bottom:3px; }
+/* ── CENTER NODE ── */
+.center {
+  position:absolute;
+  width:130px; height:130px; border-radius:50%;
+  background: radial-gradient(circle,#0c2018 0%,#050e09 100%);
+  border:2px solid var(--green);
+  box-shadow: 0 0 0 7px rgba(0,229,160,0.06), 0 0 28px rgba(0,229,160,0.28), 0 0 70px rgba(0,229,160,0.07), inset 0 0 20px rgba(0,229,160,0.04);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  transform:translate(-50%,-50%);
+  z-index:10;
+  animation:pulse 3.5s ease-in-out infinite;
+}
+@keyframes pulse{
+  0%,100%{box-shadow:0 0 0 7px rgba(0,229,160,0.06),0 0 28px rgba(0,229,160,0.28),0 0 70px rgba(0,229,160,0.07),inset 0 0 20px rgba(0,229,160,0.04);}
+  50%{box-shadow:0 0 0 12px rgba(0,229,160,0.04),0 0 48px rgba(0,229,160,0.36),0 0 110px rgba(0,229,160,0.11),inset 0 0 28px rgba(0,229,160,0.07);}
+}
+.center .c-en{font-family:'Orbitron',monospace;font-size:20px;font-weight:900;color:var(--green);letter-spacing:3px;text-shadow:0 0 10px rgba(0,229,160,0.55);}
+.center .c-zh{font-size:11px;color:rgba(0,229,160,0.5);letter-spacing:4px;margin-top:4px;}
+.center .c-sub{font-family:'Orbitron',monospace;font-size:7px;color:rgba(255,255,255,0.18);letter-spacing:2px;margin-top:3px;}
 
-  .dim-supply .dim-box { border-color:var(--dim-supply); color:var(--dim-supply); box-shadow:0 0 16px rgba(0,229,160,0.18); }
-  .dim-data   .dim-box { border-color:var(--dim-data);   color:var(--dim-data);   box-shadow:0 0 16px rgba(0,180,216,0.18); }
-  .dim-strategy .dim-box { border-color:var(--dim-strategy); color:var(--dim-strategy); box-shadow:0 0 16px rgba(245,197,24,0.18); }
+/* ── DIM NODES ── */
+.dim {
+  position:absolute; transform:translate(-50%,-50%);
+  z-index:8; cursor:pointer;
+}
+.dim-box {
+  padding:7px 14px; border-radius:4px; border:1.5px solid;
+  font-size:12px; font-weight:700; letter-spacing:1.5px; text-align:center;
+  background:rgba(7,11,16,0.95); backdrop-filter:blur(6px);
+  transition:transform 0.22s; position:relative; overflow:hidden; white-space:nowrap;
+}
+.dim-box::after{content:'';position:absolute;inset:0;background:currentColor;opacity:0.07;border-radius:3px;}
+.dim:hover .dim-box{transform:scale(1.07);}
+.dim-num{font-family:'Orbitron',monospace;font-size:8px;opacity:0.45;letter-spacing:1px;margin-bottom:2px;}
+.dim-sub{font-size:9px;opacity:0.6;margin-top:2px;}
 
-  /* ── ROLE CARDS ── */
-  .role-card {
-    position: absolute;
-    background: rgba(8,12,18,0.95);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 5px;
-    padding: 8px 11px;
-    width: 156px;
-    z-index: 7;
-    backdrop-filter: blur(8px);
-    transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
-    transform: translate(-50%, -50%);
-  }
-  .role-card:hover { transform: translate(-50%, -53%); z-index: 20; }
+/* ── ROLE CARDS ── */
+.rc {
+  position:absolute; transform:translate(-50%,-50%);
+  background:rgba(7,11,16,0.95); border:1px solid rgba(255,255,255,0.07);
+  border-radius:5px; padding:7px 10px; width:148px;
+  z-index:7; backdrop-filter:blur(8px);
+  transition:transform 0.18s,box-shadow 0.18s,border-color 0.18s;
+}
+.rc:hover{transform:translate(-50%,-54%);z-index:20;}
+.rc-tag{display:inline-block;font-size:9px;font-weight:700;letter-spacing:1px;padding:2px 6px;border-radius:2px;margin-bottom:4px;font-family:'Orbitron',monospace;}
+.rc-desc{font-size:10px;color:rgba(255,255,255,0.5);line-height:1.6;}
 
-  .role-tag {
-    display:inline-block; font-size:10px; font-weight:700;
-    letter-spacing:1px; padding:2px 7px; border-radius:2px;
-    margin-bottom:5px; font-family:'Orbitron',monospace;
-  }
-  .role-desc { font-size:11px; color:rgba(255,255,255,0.55); line-height:1.6; }
+.rp{border-color:rgba(0,229,160,0.22);} .rp .rc-tag{background:rgba(0,229,160,0.1);color:var(--r-platform);}  .rp:hover{border-color:rgba(0,229,160,0.5);box-shadow:0 0 10px rgba(0,229,160,0.12);}
+.ra{border-color:rgba(245,197,24,0.22);} .ra .rc-tag{background:rgba(245,197,24,0.1);color:var(--r-agent);}    .ra:hover{border-color:rgba(245,197,24,0.5);box-shadow:0 0 10px rgba(245,197,24,0.12);}
+.rs{border-color:rgba(0,180,216,0.22);} .rs .rc-tag{background:rgba(0,180,216,0.1);color:var(--r-sales);}     .rs:hover{border-color:rgba(0,180,216,0.5);box-shadow:0 0 10px rgba(0,180,216,0.12);}
+.rg{border-color:rgba(255,107,53,0.22);} .rg .rc-tag{background:rgba(255,107,53,0.1);color:var(--r-gtm);}    .rg:hover{border-color:rgba(255,107,53,0.5);box-shadow:0 0 10px rgba(255,107,53,0.12);}
+.re{border-color:rgba(199,125,255,0.22);} .re .rc-tag{background:rgba(199,125,255,0.1);color:var(--r-ecom);}  .re:hover{border-color:rgba(199,125,255,0.5);box-shadow:0 0 10px rgba(199,125,255,0.12);}
+.rm{border-color:rgba(255,110,180,0.22);} .rm .rc-tag{background:rgba(255,110,180,0.1);color:var(--r-mkt);}  .rm:hover{border-color:rgba(255,110,180,0.5);box-shadow:0 0 10px rgba(255,110,180,0.12);}
 
-  .role-platform { border-color:rgba(0,229,160,0.25); }
-  .role-platform .role-tag { background:rgba(0,229,160,0.12); color:var(--role-platform); }
-  .role-platform:hover { border-color:rgba(0,229,160,0.55); box-shadow:0 0 12px rgba(0,229,160,0.15); }
+/* ── SVG PATHS ── */
+.conn{stroke-width:1.1;fill:none;opacity:0.9;}
+.flow-fwd{stroke:rgba(0,229,160,0.6);stroke-width:1.4;fill:none;stroke-dasharray:6 5;animation:dfwd 1.8s linear infinite;}
+.flow-rev{stroke:rgba(255,71,87,0.6);stroke-width:1.4;fill:none;stroke-dasharray:6 5;animation:drev 1.8s linear infinite;}
+@keyframes dfwd{from{stroke-dashoffset:0}to{stroke-dashoffset:-44}}
+@keyframes drev{from{stroke-dashoffset:0}to{stroke-dashoffset:44}}
+.mf{fill:rgba(0,229,160,0.88);}
+.mr{fill:rgba(255,71,87,0.88);}
 
-  .role-agent { border-color:rgba(245,197,24,0.25); }
-  .role-agent .role-tag { background:rgba(245,197,24,0.12); color:var(--role-agent); }
-  .role-agent:hover { border-color:rgba(245,197,24,0.55); box-shadow:0 0 12px rgba(245,197,24,0.15); }
+/* ── TIMELINE (dim 8) ── */
+.timeline {
+  position:absolute;
+  left:50%; transform:translateX(-50%);
+  z-index:8;
+  display:flex; align-items:flex-start; gap:0;
+}
+.tl-step {
+  display:flex; flex-direction:column; align-items:center;
+  width:108px;
+}
+.tl-dot {
+  width:10px; height:10px; border-radius:50%;
+  background:var(--c8); box-shadow:0 0 8px rgba(168,224,99,0.5);
+  flex-shrink:0; position:relative; z-index:2;
+}
+.tl-line {
+  height:2px; flex:1; background:rgba(168,224,99,0.25);
+  margin-top:4px; width:100%; position:relative;
+}
+.tl-line::after{
+  content:''; position:absolute; right:-5px; top:-3px;
+  border:4px solid transparent; border-left:6px solid rgba(168,224,99,0.5);
+}
+.tl-connector { display:flex; align-items:center; width:100%; }
+.tl-label {
+  margin-top:8px; font-size:10px; font-weight:700; color:var(--c8);
+  letter-spacing:1px; text-align:center; white-space:nowrap;
+}
+.tl-roles {
+  margin-top:5px; font-size:9px; color:rgba(255,255,255,0.4);
+  text-align:center; line-height:1.5;
+}
+.tl-box {
+  padding:6px 4px; border-radius:4px; border:1px solid rgba(168,224,99,0.2);
+  background:rgba(7,11,16,0.94); backdrop-filter:blur(6px);
+  width:100px; text-align:center;
+}
 
-  .role-sales { border-color:rgba(0,180,216,0.25); }
-  .role-sales .role-tag { background:rgba(0,180,216,0.12); color:var(--role-sales); }
-  .role-sales:hover { border-color:rgba(0,180,216,0.55); box-shadow:0 0 12px rgba(0,180,216,0.15); }
+/* ── DIM 8 HEADER ── */
+.dim8-header {
+  position:absolute; left:50%; transform:translate(-50%,-50%);
+  z-index:8; text-align:center; cursor:pointer;
+}
+.dim8-box {
+  padding:7px 20px; border-radius:4px;
+  border:1.5px solid var(--c8); color:var(--c8);
+  font-size:12px; font-weight:700; letter-spacing:1.5px;
+  background:rgba(7,11,16,0.95); backdrop-filter:blur(6px);
+  box-shadow:0 0 16px rgba(168,224,99,0.15);
+  position:relative; overflow:hidden;
+}
+.dim8-box::after{content:'';position:absolute;inset:0;background:var(--c8);opacity:0.07;}
 
-  .role-gtm { border-color:rgba(255,107,53,0.25); }
-  .role-gtm .role-tag { background:rgba(255,107,53,0.12); color:var(--role-gtm); }
-  .role-gtm:hover { border-color:rgba(255,107,53,0.55); box-shadow:0 0 12px rgba(255,107,53,0.15); }
+/* ── LEGEND ── */
+.legend {
+  position:fixed; bottom:18px; left:18px; z-index:200;
+  background:rgba(7,11,16,0.92); border:1px solid rgba(0,229,160,0.1);
+  border-radius:6px; padding:12px 15px; backdrop-filter:blur(8px);
+}
+.lg-title{font-family:'Orbitron',monospace;font-size:7px;color:rgba(255,255,255,0.2);letter-spacing:2px;margin-bottom:8px;}
+.lg-group{margin-bottom:8px;}
+.lg-glabel{font-size:8px;color:rgba(255,255,255,0.2);letter-spacing:1px;margin-bottom:4px;}
+.lg-row{display:flex;align-items:center;gap:7px;font-size:10px;color:rgba(255,255,255,0.45);margin-bottom:3px;}
+.lg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.lg-line{width:24px;height:2px;border-radius:1px;flex-shrink:0;}
 
-  .role-ecom { border-color:rgba(199,125,255,0.25); }
-  .role-ecom .role-tag { background:rgba(199,125,255,0.12); color:var(--role-ecom); }
-  .role-ecom:hover { border-color:rgba(199,125,255,0.55); box-shadow:0 0 12px rgba(199,125,255,0.15); }
+/* ── TOOLTIP ── */
+.tip {
+  position:fixed; background:rgba(7,11,16,0.98); border:1px solid rgba(0,229,160,0.25);
+  border-radius:7px; padding:13px 16px; max-width:300px; z-index:1000;
+  opacity:0; pointer-events:none; transition:opacity 0.15s;
+  font-size:11px; line-height:1.7; color:rgba(255,255,255,0.6);
+  box-shadow:0 0 26px rgba(0,229,160,0.07);
+}
+.tip.show{opacity:1;}
+.tip-title{font-family:'Orbitron',monospace;font-size:10px;color:var(--green);letter-spacing:1px;margin-bottom:8px;font-weight:700;}
+.tip-section{margin-bottom:7px;}
+.tip-label{font-size:8px;color:rgba(255,255,255,0.24);letter-spacing:1.5px;margin-bottom:3px;}
+.badge{display:inline-block;font-size:8px;padding:1px 6px;border-radius:2px;margin-right:3px;font-weight:600;}
+.bf{background:rgba(0,229,160,0.14);color:var(--green);}
+.br{background:rgba(255,71,87,0.14);color:var(--red);}
 
-  /* ── SVG ── */
-  .conn-supply  { stroke:rgba(0,229,160,0.2);  stroke-width:1.2; fill:none; }
-  .conn-data    { stroke:rgba(0,180,216,0.2);  stroke-width:1.2; fill:none; }
-  .conn-strategy{ stroke:rgba(245,197,24,0.2); stroke-width:1.2; fill:none; }
-
-  .flow-fwd { stroke:rgba(0,229,160,0.6); stroke-width:1.5; fill:none; stroke-dasharray:7 5; animation:dashFwd 1.8s linear infinite; }
-  .flow-rev { stroke:rgba(255,71,87,0.6);  stroke-width:1.5; fill:none; stroke-dasharray:7 5; animation:dashRev 1.8s linear infinite; }
-
-  @keyframes dashFwd { from{stroke-dashoffset:0} to{stroke-dashoffset:-48} }
-  @keyframes dashRev { from{stroke-dashoffset:0} to{stroke-dashoffset:48} }
-
-  .marker-fwd { fill:rgba(0,229,160,0.9); }
-  .marker-rev { fill:rgba(255,71,87,0.9); }
-
-  /* ── LEGEND ── */
-  .legend {
-    position:fixed; bottom:20px; left:20px; z-index:100;
-    background:rgba(8,12,18,0.9); border:1px solid rgba(0,229,160,0.12);
-    border-radius:6px; padding:13px 16px; backdrop-filter:blur(8px);
-  }
-  .legend-title { font-family:'Orbitron',monospace; font-size:8px; color:rgba(255,255,255,0.22); letter-spacing:2px; margin-bottom:9px; }
-  .legend-group { margin-bottom:9px; }
-  .legend-group-label { font-size:9px; color:rgba(255,255,255,0.22); letter-spacing:1px; margin-bottom:5px; }
-  .legend-item { display:flex; align-items:center; gap:8px; font-size:11px; color:rgba(255,255,255,0.48); margin-bottom:3px; }
-  .legend-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
-  .legend-line { width:26px; height:2px; flex-shrink:0; border-radius:1px; }
-
-  /* ── HEADER ── */
-  .map-header {
-    position:fixed; top:20px; left:50%; transform:translateX(-50%);
-    z-index:100; text-align:center;
-  }
-  .map-header h1 {
-    font-family:'Orbitron',monospace; font-size:11px;
-    color:rgba(0,229,160,0.32); letter-spacing:7px; font-weight:400;
-  }
-
-  /* corners */
-  .corner { position:fixed; width:34px; height:34px; z-index:100; opacity:0.22; }
-  .corner-tl { top:13px; left:13px; border-top:1px solid var(--accent-green); border-left:1px solid var(--accent-green); }
-  .corner-tr { top:13px; right:13px; border-top:1px solid var(--accent-green); border-right:1px solid var(--accent-green); }
-  .corner-bl { bottom:13px; left:13px; border-bottom:1px solid var(--accent-green); border-left:1px solid var(--accent-green); }
-  .corner-br { bottom:13px; right:13px; border-bottom:1px solid var(--accent-green); border-right:1px solid var(--accent-green); }
-
-  /* scanline */
-  .scanline { position:fixed; left:0; width:100%; height:3px; background:linear-gradient(transparent,rgba(0,229,160,0.022),transparent); animation:scan 10s linear infinite; pointer-events:none; z-index:300; }
-  @keyframes scan { 0%{top:-3px} 100%{top:100%} }
-
-  /* TOOLTIP */
-  .tooltip {
-    position:fixed; background:rgba(8,12,18,0.98); border:1px solid rgba(0,229,160,0.28);
-    border-radius:7px; padding:13px 17px; max-width:300px; z-index:1000;
-    opacity:0; pointer-events:none; transition:opacity 0.16s;
-    font-size:12px; line-height:1.7; color:rgba(255,255,255,0.62);
-    box-shadow:0 0 28px rgba(0,229,160,0.08);
-  }
-  .tooltip.show { opacity:1; }
-  .tt-title { font-family:'Orbitron',monospace; font-size:11px; color:var(--accent-green); letter-spacing:1px; margin-bottom:9px; font-weight:700; }
-  .tt-section { margin-bottom:8px; }
-  .tt-label { font-size:9px; color:rgba(255,255,255,0.26); letter-spacing:1.5px; margin-bottom:4px; }
-  .tt-role { margin-bottom:3px; }
-  .tt-role strong { color:rgba(255,255,255,0.85); font-weight:500; }
-  .badge { display:inline-block; font-size:9px; padding:1px 7px; border-radius:2px; margin-right:4px; font-weight:600; }
-  .badge-fwd { background:rgba(0,229,160,0.15); color:var(--accent-green); }
-  .badge-rev { background:rgba(255,71,87,0.15); color:var(--accent-red); }
-
-  .hint { position:fixed; bottom:20px; right:20px; font-size:10px; color:rgba(255,255,255,0.16); letter-spacing:1px; z-index:100; }
+.hint{position:fixed;bottom:18px;right:18px;font-size:9px;color:rgba(255,255,255,0.14);letter-spacing:1px;z-index:200;}
 </style>
 </head>
 <body>
-
-<div class="scanline"></div>
-<div class="corner corner-tl"></div>
-<div class="corner corner-tr"></div>
-<div class="corner corner-bl"></div>
-<div class="corner corner-br"></div>
-
-<div class="map-header"><h1>OTTO · BATTLE MAP · 作战地图</h1></div>
+<div class="scan"></div>
+<div class="corner corner-tl"></div><div class="corner corner-tr"></div>
+<div class="corner corner-bl"></div><div class="corner corner-br"></div>
+<div class="hdr">OTTO · BATTLE MAP · 作战地图</div>
 <div class="hint">点击维度节点查看详情</div>
 
-<div id="app">
-  <svg id="svg-layer" xmlns="http://www.w3.org/2000/svg">
+<div id="canvas">
+  <svg id="lines" xmlns="http://www.w3.org/2000/svg">
     <defs>
-      <marker id="mf" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
-        <polygon points="0 0, 7 3.5, 0 7" class="marker-fwd"/>
-      </marker>
-      <marker id="mr" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
-        <polygon points="0 0, 7 3.5, 0 7" class="marker-rev"/>
-      </marker>
+      <marker id="mf" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><polygon points="0 0,6 3,0 6" class="mf"/></marker>
+      <marker id="mr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><polygon points="0 0,6 3,0 6" class="mr"/></marker>
     </defs>
   </svg>
 
   <!-- CENTER -->
-  <div class="center-node" id="center">
+  <div class="center" id="center">
     <div class="c-en">OTTO</div>
     <div class="c-zh">作战地图</div>
     <div class="c-sub">BATTLE MAP</div>
   </div>
 
-  <!-- DIM nodes (positions set by JS) -->
-  <div class="dim-node dim-supply" id="dim-supply" onclick="showTip(event,'supply')">
-    <div class="dim-box"><div class="dim-num">01 · SUPPLY</div>货&nbsp;&nbsp;源</div>
-  </div>
-  <div class="dim-node dim-data" id="dim-data" onclick="showTip(event,'data')">
-    <div class="dim-box">
-      <div class="dim-num">02 · MONITOR</div>数据监控
-      <div style="font-size:10px;opacity:0.65;margin-top:2px;">销量 / 广告</div>
+  <!-- ══ DIM 1: 货源 ══ -->
+  <div class="dim" id="d1" onclick="tip(event,'d1')">
+    <div class="dim-box" style="border-color:var(--c1);color:var(--c1);box-shadow:0 0 14px rgba(0,229,160,0.15)">
+      <div class="dim-num">01 · SUPPLY</div>货&nbsp;&nbsp;源
     </div>
   </div>
-  <div class="dim-node dim-strategy" id="dim-strategy" onclick="showTip(event,'strategy')">
-    <div class="dim-box"><div class="dim-num">03 · STRATEGY</div>策略优化</div>
+  <div class="rc rp" id="d1r1"><span class="rc-tag">平台</span><div class="rc-desc">根据进销存报未来三月预测</div></div>
+  <div class="rc ra" id="d1r2"><span class="rc-tag">代理</span><div class="rc-desc">承接资金物流，确保货款</div></div>
+  <div class="rc rs" id="d1r3"><span class="rc-tag">DJI 销售</span><div class="rc-desc">与 GTM/产销锁预测中的货量</div></div>
+  <div class="rc rg" id="d1r4"><span class="rc-tag">GTM</span><div class="rc-desc">产能预警，断货节奏预判，提前与销售沟通</div></div>
+
+  <!-- ══ DIM 2: 数据监控 ══ -->
+  <div class="dim" id="d2" onclick="tip(event,'d2')">
+    <div class="dim-box" style="border-color:var(--c2);color:var(--c2);box-shadow:0 0 14px rgba(0,180,216,0.15)">
+      <div class="dim-num">02 · MONITOR</div>数据监控
+      <div class="dim-sub">销量 / 广告</div>
+    </div>
+  </div>
+  <div class="rc rp" id="d2r1"><span class="rc-tag">平台</span><div class="rc-desc">两周为维度提供销量/广告数据</div></div>
+  <div class="rc re" id="d2r2"><span class="rc-tag">电商</span><div class="rc-desc">数据分析，返回优化建议</div></div>
+  <div class="rc ra" id="d2r3"><span class="rc-tag">代理</span><div class="rc-desc">推动平台落地优化建议</div></div>
+
+  <!-- ══ DIM 3: 策略优化 ══ -->
+  <div class="dim" id="d3" onclick="tip(event,'d3')">
+    <div class="dim-box" style="border-color:var(--c3);color:var(--c3);box-shadow:0 0 14px rgba(245,197,24,0.15)">
+      <div class="dim-num">03 · STRATEGY</div>策略优化
+    </div>
+  </div>
+  <div class="rc rp" id="d3r1"><span class="rc-tag">平台</span><div class="rc-desc">提供类目竞争态势，对比竞对参数差距</div></div>
+  <div class="rc re" id="d3r2"><span class="rc-tag">电商</span><div class="rc-desc">优化价促、打法，返回给平台</div></div>
+  <div class="rc ra" id="d3r3"><span class="rc-tag">代理</span><div class="rc-desc">跟进平台落地</div></div>
+
+  <!-- ══ DIM 4: 周会机制 ══ -->
+  <div class="dim" id="d4" onclick="tip(event,'d4')">
+    <div class="dim-box" style="border-color:var(--c4);color:var(--c4);box-shadow:0 0 14px rgba(255,107,53,0.15)">
+      <div class="dim-num">04 · WEEKLY</div>周会机制
+    </div>
+  </div>
+  <div class="rc rg" id="d4r1"><span class="rc-tag">GTM + 电商</span><div class="rc-desc">同步货源节奏</div></div>
+  <div class="rc rs" id="d4r2"><span class="rc-tag">销售</span><div class="rc-desc">同步代理打款进度，库存情况</div></div>
+  <div class="rc re" id="d4r3"><span class="rc-tag">GTM+电商+销售</span><div class="rc-desc">上周策略落地情况复盘</div></div>
+
+  <!-- ══ DIM 5: 日常巡检 ══ -->
+  <div class="dim" id="d5" onclick="tip(event,'d5')">
+    <div class="dim-box" style="border-color:var(--c5);color:var(--c5);box-shadow:0 0 14px rgba(199,125,255,0.15)">
+      <div class="dim-num">05 · PATROL</div>日常巡检
+      <div class="dim-sub">价格 / 权益</div>
+    </div>
+  </div>
+  <div class="rc re" id="d5r1"><span class="rc-tag">电商</span><div class="rc-desc">价格自动巡检</div></div>
+  <div class="rc rs" id="d5r2"><span class="rc-tag">销售</span><div class="rc-desc">跟进货源情况</div></div>
+
+  <!-- ══ DIM 6: 大促日历 ══ -->
+  <div class="dim" id="d6" onclick="tip(event,'d6')">
+    <div class="dim-box" style="border-color:var(--c6);color:var(--c6);box-shadow:0 0 14px rgba(255,110,180,0.15)">
+      <div class="dim-num">06 · PROMO</div>大促日历
+    </div>
+  </div>
+  <div class="rc rp" id="d6r1"><span class="rc-tag">平台</span><div class="rc-desc">提前8周确认主推大促节点，发起 Deal Sourcing</div></div>
+
+  <!-- ══ DIM 7: 年框敲定 ══ -->
+  <div class="dim" id="d7" onclick="tip(event,'d7')">
+    <div class="dim-box" style="border-color:var(--c7);color:var(--c7);box-shadow:0 0 14px rgba(0,212,200,0.15)">
+      <div class="dim-num">07 · ANNUAL</div>年框敲定
+    </div>
+  </div>
+  <div class="rc rg" id="d7r1"><span class="rc-tag">GTM + MKT</span><div class="rc-desc">主导统筹资源，聊年度策略及资源对投</div></div>
+  <div class="rc rp" id="d7r2"><span class="rc-tag">平台</span><div class="rc-desc">首页 Banner、大促落地页导流，类目流量倾斜</div></div>
+  <div class="rc rm" id="d7r3"><span class="rc-tag">电商+MKT+代理</span><div class="rc-desc">平台资源包采买，站外 MKT 资源</div></div>
+
+  <!-- ══ DIM 8: 组织/节奏 — bottom timeline ══ -->
+  <div class="dim8-header" id="d8h" onclick="tip(event,'d8')">
+    <div class="dim8-box">
+      <div class="dim-num" style="color:var(--c8)">08 · RHYTHM</div>
+      组织 / 节奏
+    </div>
   </div>
 
-  <!-- Role cards (positions set by JS) -->
-  <!-- 货源 -->
-  <div class="role-card role-platform" id="rs-platform">
-    <span class="role-tag">平台</span>
-    <div class="role-desc">根据进销存报未来三月预测</div>
-  </div>
-  <div class="role-card role-agent" id="rs-agent">
-    <span class="role-tag">代理</span>
-    <div class="role-desc">承接资金物流平台，确保货款</div>
-  </div>
-  <div class="role-card role-sales" id="rs-sales">
-    <span class="role-tag">DJI 销售</span>
-    <div class="role-desc">与 GTM / 产销锁预测中的货量</div>
-  </div>
-  <div class="role-card role-gtm" id="rs-gtm">
-    <span class="role-tag">GTM</span>
-    <div class="role-desc">产能预警，判断断货节奏，提前与销售沟通</div>
+  <!-- Timeline steps -->
+  <div class="timeline" id="tl">
+    <div class="tl-step">
+      <div class="tl-box" style="border-color:rgba(168,224,99,0.25)">
+        <div class="tl-label">市场洞察</div>
+        <div class="tl-roles">电商</div>
+      </div>
+      <div style="width:2px;height:14px;background:rgba(168,224,99,0.2);margin:0 auto;"></div>
+      <div class="tl-dot"></div>
+    </div>
+    <div style="flex:1;height:2px;background:rgba(168,224,99,0.2);margin-top:53px;position:relative;">
+      <div style="position:absolute;right:-4px;top:-3px;border:4px solid transparent;border-left:5px solid rgba(168,224,99,0.4)"></div>
+    </div>
+    <div class="tl-step">
+      <div class="tl-box" style="border-color:rgba(168,224,99,0.25)">
+        <div class="tl-label">品牌定位</div>
+        <div class="tl-roles">电商 + 销售</div>
+      </div>
+      <div style="width:2px;height:14px;background:rgba(168,224,99,0.2);margin:0 auto;"></div>
+      <div class="tl-dot"></div>
+    </div>
+    <div style="flex:1;height:2px;background:rgba(168,224,99,0.2);margin-top:53px;position:relative;">
+      <div style="position:absolute;right:-4px;top:-3px;border:4px solid transparent;border-left:5px solid rgba(168,224,99,0.4)"></div>
+    </div>
+    <div class="tl-step">
+      <div class="tl-box" style="border-color:rgba(168,224,99,0.25)">
+        <div class="tl-label">选品 / 定价</div>
+        <div class="tl-roles">GTM</div>
+      </div>
+      <div style="width:2px;height:14px;background:rgba(168,224,99,0.2);margin:0 auto;"></div>
+      <div class="tl-dot"></div>
+    </div>
+    <div style="flex:1;height:2px;background:rgba(168,224,99,0.2);margin-top:53px;position:relative;">
+      <div style="position:absolute;right:-4px;top:-3px;border:4px solid transparent;border-left:5px solid rgba(168,224,99,0.4)"></div>
+    </div>
+    <div class="tl-step">
+      <div class="tl-box" style="border-color:rgba(168,224,99,0.25)">
+        <div class="tl-label">内容种草</div>
+        <div class="tl-roles">MKT + 电商</div>
+      </div>
+      <div style="width:2px;height:14px;background:rgba(168,224,99,0.2);margin:0 auto;"></div>
+      <div class="tl-dot"></div>
+    </div>
+    <div style="flex:1;height:2px;background:rgba(168,224,99,0.2);margin-top:53px;position:relative;">
+      <div style="position:absolute;right:-4px;top:-3px;border:4px solid transparent;border-left:5px solid rgba(168,224,99,0.4)"></div>
+    </div>
+    <div class="tl-step">
+      <div class="tl-box" style="border-color:rgba(168,224,99,0.25)">
+        <div class="tl-label">流量收割</div>
+        <div class="tl-roles">电商 + 平台</div>
+      </div>
+      <div style="width:2px;height:14px;background:rgba(168,224,99,0.2);margin:0 auto;"></div>
+      <div class="tl-dot"></div>
+    </div>
+    <div style="flex:1;height:2px;background:rgba(168,224,99,0.2);margin-top:53px;position:relative;">
+      <div style="position:absolute;right:-4px;top:-3px;border:4px solid transparent;border-left:5px solid rgba(168,224,99,0.4)"></div>
+    </div>
+    <div class="tl-step">
+      <div class="tl-box" style="border-color:rgba(168,224,99,0.25)">
+        <div class="tl-label">履约交付</div>
+        <div class="tl-roles">电商+销售<br>平台+代理</div>
+      </div>
+      <div style="width:2px;height:14px;background:rgba(168,224,99,0.2);margin:0 auto;"></div>
+      <div class="tl-dot"></div>
+    </div>
+    <div style="flex:1;height:2px;background:rgba(168,224,99,0.2);margin-top:53px;position:relative;">
+      <div style="position:absolute;right:-4px;top:-3px;border:4px solid transparent;border-left:5px solid rgba(168,224,99,0.4)"></div>
+    </div>
+    <div class="tl-step">
+      <div class="tl-box" style="border-color:rgba(168,224,99,0.25)">
+        <div class="tl-label">用户留存</div>
+        <div class="tl-roles">电商 + 平台</div>
+      </div>
+      <div style="width:2px;height:14px;background:rgba(168,224,99,0.2);margin:0 auto;"></div>
+      <div class="tl-dot"></div>
+    </div>
+    <div style="flex:1;height:2px;background:rgba(168,224,99,0.2);margin-top:53px;position:relative;">
+      <div style="position:absolute;right:-4px;top:-3px;border:4px solid transparent;border-left:5px solid rgba(168,224,99,0.4)"></div>
+    </div>
+    <div class="tl-step">
+      <div class="tl-box" style="border-color:rgba(168,224,99,0.25)">
+        <div class="tl-label">数据复盘</div>
+        <div class="tl-roles">电商 + 平台</div>
+      </div>
+      <div style="width:2px;height:14px;background:rgba(168,224,99,0.2);margin:0 auto;"></div>
+      <div class="tl-dot" style="background:var(--c8);box-shadow:0 0 10px rgba(168,224,99,0.7)"></div>
+    </div>
   </div>
 
-  <!-- 数据监控 -->
-  <div class="role-card role-platform" id="rd-platform">
-    <span class="role-tag">平台</span>
-    <div class="role-desc">两周为维度提供销量 / 广告数据</div>
-  </div>
-  <div class="role-card role-ecom" id="rd-ecom">
-    <span class="role-tag">电商运营</span>
-    <div class="role-desc">数据分析，返回优化建议</div>
-  </div>
-  <div class="role-card role-agent" id="rd-agent">
-    <span class="role-tag">代理</span>
-    <div class="role-desc">推动平台落地优化建议</div>
-  </div>
-
-  <!-- 策略优化 -->
-  <div class="role-card role-platform" id="rg-platform">
-    <span class="role-tag">平台</span>
-    <div class="role-desc">提供类目竞争态势，对比竞对参数差距（广告 / 销量 / 流量）</div>
-  </div>
-  <div class="role-card role-ecom" id="rg-ecom">
-    <span class="role-tag">电商运营</span>
-    <div class="role-desc">优化价促、打法，返回给平台</div>
-  </div>
-  <div class="role-card role-agent" id="rg-agent">
-    <span class="role-tag">代理</span>
-    <div class="role-desc">跟进平台落地</div>
-  </div>
-</div>
+</div><!-- #canvas -->
 
 <!-- Legend -->
 <div class="legend">
-  <div class="legend-title">LEGEND · 图例</div>
-  <div class="legend-group">
-    <div class="legend-group-label">角色</div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--role-platform)"></div>平台</div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--role-agent)"></div>代理</div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--role-sales)"></div>DJI 销售</div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--role-gtm)"></div>GTM</div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--role-ecom)"></div>电商运营</div>
+  <div class="lg-title">LEGEND · 图例</div>
+  <div class="lg-group">
+    <div class="lg-glabel">角色</div>
+    <div class="lg-row"><div class="lg-dot" style="background:var(--r-platform)"></div>平台</div>
+    <div class="lg-row"><div class="lg-dot" style="background:var(--r-agent)"></div>代理</div>
+    <div class="lg-row"><div class="lg-dot" style="background:var(--r-sales)"></div>DJI 销售</div>
+    <div class="lg-row"><div class="lg-dot" style="background:var(--r-gtm)"></div>GTM</div>
+    <div class="lg-row"><div class="lg-dot" style="background:var(--r-ecom)"></div>电商</div>
+    <div class="lg-row"><div class="lg-dot" style="background:var(--r-mkt)"></div>MKT</div>
   </div>
-  <div class="legend-group">
-    <div class="legend-group-label">流程</div>
-    <div class="legend-item">
-      <div class="legend-line" style="background:linear-gradient(90deg,rgba(0,229,160,0.3),var(--accent-green))"></div>正向流程
-    </div>
-    <div class="legend-item">
-      <div class="legend-line" style="background:linear-gradient(90deg,rgba(255,71,87,0.3),var(--accent-red))"></div>反向流程
-    </div>
+  <div class="lg-group">
+    <div class="lg-glabel">流程</div>
+    <div class="lg-row"><div class="lg-line" style="background:linear-gradient(90deg,rgba(0,229,160,0.3),var(--green))"></div>正向</div>
+    <div class="lg-row"><div class="lg-line" style="background:linear-gradient(90deg,rgba(255,71,87,0.3),var(--red))"></div>反向</div>
   </div>
 </div>
 
-<div class="tooltip" id="tooltip"></div>
+<div class="tip" id="tip"></div>
 
 <script>
-/* ═══════════════════════════════════════════════
-   LAYOUT ENGINE — all positions in px from center
-   ═══════════════════════════════════════════════ */
-
-// Scale factor: all offsets are authored for a 1440×900 canvas.
-// On other sizes we scale proportionally, clamped so it never overflows.
-function getScale() {
-  const sw = window.innerWidth  / 1440;
-  const sh = window.innerHeight / 900;
-  return Math.min(sw, sh, 1.1); // don't scale up beyond 110%
-}
-
-// All positions are [dx, dy] from screen center (px, at scale=1)
-const LAYOUT = {
-  // dim nodes
-  'dim-supply':   { dx: -310, dy: -210 },  // upper-left
-  'dim-data':     { dx:  310, dy:  -20 },  // right-center
-  'dim-strategy': { dx: -310, dy:  215 },  // lower-left
-
-  // 货源 role cards  (cluster around dim-supply)
-  'rs-platform':  { dx: -490, dy: -295 },
-  'rs-agent':     { dx: -490, dy: -170 },
-  'rs-sales':     { dx: -185, dy: -310 },
-  'rs-gtm':       { dx:  -10, dy: -310 },
-
-  // 数据监控 role cards (cluster around dim-data, stacked right)
-  'rd-platform':  { dx:  490, dy: -200 },
-  'rd-ecom':      { dx:  490, dy:  -55 },
-  'rd-agent':     { dx:  490, dy:   90 },
-
-  // 策略优化 role cards (cluster around dim-strategy)
-  'rg-platform':  { dx: -490, dy:  130 },
-  'rg-ecom':      { dx: -490, dy:  265 },
-  'rg-agent':     { dx: -220, dy:  330 },
+/* ═══════════════════════════════
+   TOOLTIP DATA
+═══════════════════════════════ */
+const TIPS = {
+  d1: {
+    title:'01 · 货源管理',
+    roles:[
+      {c:'var(--r-platform)',n:'平台',d:'根据进销存报未来三月预测'},
+      {c:'var(--r-agent)',   n:'代理',d:'承接资金物流平台，确保货款'},
+      {c:'var(--r-sales)',  n:'DJI 销售',d:'与 GTM/产销锁预测中的货量'},
+      {c:'var(--r-gtm)',    n:'GTM',d:'与产销根据 Otto 货量进行产能预警，判断断货节奏，提前与销售沟通'},
+    ],
+    flows:[
+      {t:'fwd',tx:'代理提报 → 销售/电商运营传达 → GTM 与产销产能对接'},
+      {t:'rev',tx:'GTM 根据预测判断断货风险 → 传达电商 & 销售'},
+    ]
+  },
+  d2: {
+    title:'02 · 数据监控（销量/广告）',
+    roles:[
+      {c:'var(--r-platform)',n:'平台',d:'两周为维度提供销量/广告数据'},
+      {c:'var(--r-ecom)',    n:'电商',d:'数据分析，返回优化建议'},
+      {c:'var(--r-agent)',  n:'代理',d:'推动平台落地优化建议'},
+    ],
+    flows:[{t:'fwd',tx:'平台原数据 → 电商分析 → 销售跟踪落地 → 平台执行 → 闭环'}]
+  },
+  d3: {
+    title:'03 · 策略优化',
+    roles:[
+      {c:'var(--r-platform)',n:'平台',d:'提供类目竞争态势，对比竞对参数差距（广告/销量/流量）'},
+      {c:'var(--r-ecom)',    n:'电商',d:'优化价促、打法，返回给平台'},
+      {c:'var(--r-agent)',  n:'代理',d:'跟进平台落地'},
+    ],
+    flows:[
+      {t:'fwd',tx:'平台提供数据 → 电商提供解决方案 → 代理跟进落地'},
+      {t:'rev',tx:'电商优化方案反向输出给平台执行'},
+    ]
+  },
+  d4: {
+    title:'04 · 周会机制',
+    roles:[
+      {c:'var(--r-gtm)',  n:'GTM + 电商',d:'同步货源节奏'},
+      {c:'var(--r-sales)',n:'销售',d:'同步当前代理打款进度，库存情况'},
+      {c:'var(--r-ecom)', n:'GTM+电商+销售',d:'上周策略落地情况复盘'},
+    ],
+    flows:[]
+  },
+  d5: {
+    title:'05 · 日常巡检（价格/权益）',
+    roles:[
+      {c:'var(--r-ecom)', n:'电商',d:'价格自动巡检'},
+      {c:'var(--r-sales)',n:'销售',d:'跟进货源情况'},
+    ],
+    flows:[]
+  },
+  d6: {
+    title:'06 · 大促日历',
+    roles:[
+      {c:'var(--r-platform)',n:'平台',d:'提前 8 周确认是否主推某一大促节点，发起 Deal Sourcing'},
+    ],
+    flows:[]
+  },
+  d7: {
+    title:'07 · 年框敲定',
+    roles:[
+      {c:'var(--r-gtm)', n:'GTM + MKT',d:'GTM 主导，统筹资源，聊年度策略及资源对投'},
+      {c:'var(--r-platform)',n:'平台',d:'首页 Banner、大促落地页导流，类目流量倾斜'},
+      {c:'var(--r-mkt)', n:'电商+MKT+代理',d:'平台资源包采买，站外 MKT 资源'},
+    ],
+    flows:[]
+  },
+  d8: {
+    title:'08 · 组织 / 节奏',
+    roles:[
+      {c:'var(--r-ecom)',    n:'电商',d:'发起市场洞察'},
+      {c:'var(--r-sales)',   n:'电商 + 销售',d:'品牌定位'},
+      {c:'var(--r-gtm)',     n:'GTM',d:'选品 / 定价'},
+      {c:'var(--r-mkt)',     n:'MKT + 电商',d:'内容种草，站内推广'},
+      {c:'var(--r-platform)',n:'电商 + 平台',d:'流量收割'},
+      {c:'var(--r-agent)',   n:'电商+销售+平台+代理',d:'履约交付'},
+      {c:'var(--r-platform)',n:'电商 + 平台',d:'输出用户留存方案'},
+      {c:'var(--r-platform)',n:'电商 + 平台',d:'数据复盘并修正'},
+    ],
+    flows:[{t:'fwd',tx:'市场洞察 → 品牌定位 → 选品/定价 → 内容种草 → 流量收割 → 履约交付 → 用户留存 → 数据复盘'}]
+  }
 };
 
-function place() {
-  const cx = window.innerWidth  / 2;
-  const cy = window.innerHeight / 2;
+function tip(e, key) {
+  e.stopPropagation();
+  const d = TIPS[key];
+  const el = document.getElementById('tip');
+  const rHtml = d.roles.map(r=>`<div style="margin-bottom:3px"><strong style="color:${r.c}">${r.n}</strong>：${r.d}</div>`).join('');
+  const fHtml = d.flows.map(f=>`<div style="margin-bottom:4px"><span class="badge ${f.t==='fwd'?'bf':'br'}">${f.t==='fwd'?'▶ 正向':'◀ 反向'}</span>${f.tx}</div>`).join('');
+  el.innerHTML = `
+    <div class="tip-title">${d.title}</div>
+    <div class="tip-section"><div class="tip-label">角色职责</div>${rHtml}</div>
+    ${fHtml ? `<div class="tip-section"><div class="tip-label">流程</div>${fHtml}</div>` : ''}
+  `;
+  const x=e.clientX+16, y=e.clientY-10;
+  el.style.left = Math.min(x, innerWidth-315)+'px';
+  el.style.top  = Math.max(8, Math.min(y, innerHeight-240))+'px';
+  el.classList.add('show');
+}
+document.addEventListener('click', ()=>document.getElementById('tip').classList.remove('show'));
+
+/* ═══════════════════════════════
+   LAYOUT ENGINE
+   Positions are px offsets from screen center (at scale=1, base 1440×820)
+   7 dims arranged in a ring; dim8 is a bottom timeline
+═══════════════════════════════ */
+
+// Ring radius for dim nodes
+const DIM_R = 230;
+
+// 7 dims at angles (degrees, 0=right, CCW)
+// Arranged: top-right cluster for 1-3, top-left for 4-5, bottom-left for 6-7
+const DIM_ANGLES = {
+  d1: -55,   // upper-right
+  d2:   8,   // right
+  d3:  62,   // lower-right
+  d4: -122,  // upper-left
+  d5: 175,   // left
+  d6: 118,   // lower-left
+  d7: -175,  // far-left
+};
+
+// Role card offsets relative to their dim center [dx, dy]
+const ROLE_POS = {
+  d1: [[-195,-65],[-195,25],[ 50,-100],[ 220,-100]],
+  d2: [[ 160,-70],[ 160, 20],[ 160,105]],
+  d3: [[ 160, 20],[ 160,100],[ 50,150]],
+  d4: [[-80,-80],[-80, 10],[-80, 95]],
+  d5: [[-170,-35],[-170, 45]],
+  d6: [[-50, 85]],
+  d7: [[-10,-80],[-10, 20],[-10,110]],
+};
+
+function deg2rad(d){ return d * Math.PI / 180; }
+
+function getScale(){
+  return Math.min(window.innerWidth/1440, (window.innerHeight*0.78)/820, 1.05);
+}
+
+function place(){
+  const cx = innerWidth/2;
+  const cy = innerHeight * 0.46; // slightly above center to leave room for timeline
   const s  = getScale();
 
-  // Center node
-  const cen = document.getElementById('center');
-  cen.style.left = cx + 'px';
-  cen.style.top  = cy + 'px';
+  // center
+  const cEl = document.getElementById('center');
+  cEl.style.left = cx+'px';
+  cEl.style.top  = cy+'px';
 
-  // All other nodes
-  for (const [id, pos] of Object.entries(LAYOUT)) {
+  // dim nodes
+  for(const [id, ang] of Object.entries(DIM_ANGLES)){
     const el = document.getElementById(id);
-    if (!el) continue;
-    el.style.left = (cx + pos.dx * s) + 'px';
-    el.style.top  = (cy + pos.dy * s) + 'px';
+    if(!el) continue;
+    const rad = deg2rad(ang);
+    el.style.left = (cx + Math.cos(rad)*DIM_R*s)+'px';
+    el.style.top  = (cy + Math.sin(rad)*DIM_R*s)+'px';
+  }
+
+  // role cards relative to their dim
+  for(const [dim, positions] of Object.entries(ROLE_POS)){
+    const dimEl = document.getElementById(dim);
+    if(!dimEl) continue;
+    const dr = dimEl.getBoundingClientRect();
+    const dm = { x: dr.left+dr.width/2, y: dr.top+dr.height/2 };
+    positions.forEach(([dx,dy], i)=>{
+      const el = document.getElementById(`${dim}r${i+1}`);
+      if(!el) return;
+      el.style.left = (dm.x + dx*s)+'px';
+      el.style.top  = (dm.y + dy*s)+'px';
+    });
+  }
+
+  // dim8 header
+  const d8h = document.getElementById('d8h');
+  if(d8h){
+    d8h.style.left = cx+'px';
+    d8h.style.top  = (cy + 270*s)+'px';
+  }
+
+  // timeline
+  const tl = document.getElementById('tl');
+  if(tl){
+    const tlW = Math.min(innerWidth - 80, 900);
+    tl.style.width = tlW+'px';
+    tl.style.top = (cy + 330*s)+'px';
   }
 }
 
-/* ═══════════════════════════════════════════════
-   SVG drawing
-   ═══════════════════════════════════════════════ */
-function rc(id) {
-  const el = document.getElementById(id);
-  return el ? el.getBoundingClientRect() : null;
-}
-function mid(r) { return { x: r.left + r.width/2, y: r.top + r.height/2 }; }
+/* ═══════════════════════════════
+   SVG LINES
+═══════════════════════════════ */
+function gb(id){ const e=document.getElementById(id); return e?e.getBoundingClientRect():null; }
+function mid(r){ return {x:r.left+r.width/2, y:r.top+r.height/2}; }
 
-function addPath(d, cls, markerId) {
-  const svg = document.getElementById('svg-layer');
-  const p = document.createElementNS('http://www.w3.org/2000/svg','path');
-  p.setAttribute('d', d);
-  p.setAttribute('class', cls);
-  if (markerId) p.setAttribute('marker-end', `url(#${markerId})`);
-  svg.appendChild(p);
-}
-
-function addLine(x1,y1,x2,y2,cls) {
-  const svg = document.getElementById('svg-layer');
-  const l = document.createElementNS('http://www.w3.org/2000/svg','line');
-  l.setAttribute('x1',x1); l.setAttribute('y1',y1);
-  l.setAttribute('x2',x2); l.setAttribute('y2',y2);
-  l.setAttribute('class',cls);
+function addLine(x1,y1,x2,y2,cls,op){
+  const svg=document.getElementById('lines');
+  const l=document.createElementNS('http://www.w3.org/2000/svg','line');
+  l.setAttribute('x1',x1);l.setAttribute('y1',y1);l.setAttribute('x2',x2);l.setAttribute('y2',y2);
+  l.setAttribute('class','conn '+cls);
+  if(op) l.setAttribute('style',`opacity:${op}`);
   svg.appendChild(l);
 }
 
-function addText(x,y,txt,color) {
-  const svg = document.getElementById('svg-layer');
-  const t = document.createElementNS('http://www.w3.org/2000/svg','text');
-  t.setAttribute('x',x); t.setAttribute('y',y);
-  t.setAttribute('fill', color||'rgba(255,255,255,0.22)');
-  t.setAttribute('font-size','9');
-  t.setAttribute('font-family','Noto Sans SC,sans-serif');
-  t.setAttribute('text-anchor','middle');
-  t.setAttribute('letter-spacing','1');
-  t.textContent = txt;
-  svg.appendChild(t);
+function addPath(d,cls,marker){
+  const svg=document.getElementById('lines');
+  const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+  p.setAttribute('d',d); p.setAttribute('class',cls);
+  if(marker) p.setAttribute('marker-end',`url(#${marker})`);
+  svg.appendChild(p);
 }
 
-// Cubic bezier from (x1,y1) to (x2,y2)
-function curve(x1,y1,x2,y2,cls,marker) {
-  const dx = (x2-x1)*0.42;
-  addPath(`M${x1},${y1} C${x1+dx},${y1} ${x2-dx},${y2} ${x2},${y2}`, cls, marker);
+function curveLine(x1,y1,x2,y2,cls,marker){
+  const dx=(x2-x1)*0.4;
+  addPath(`M${x1},${y1} C${x1+dx},${y1} ${x2-dx},${y2} ${x2},${y2}`,cls,marker);
 }
 
-// Dim-to-center connector: line from center circle edge to dim node edge
-function dimConnector(dimId, connCls) {
-  const cr = rc('center'), dr = rc(dimId);
-  if (!cr||!dr) return;
-  const cm = mid(cr), dm = mid(dr);
-  const dx = dm.x-cm.x, dy = dm.y-cm.y, len = Math.hypot(dx,dy);
-  const r = 70; // center radius in px
-  addLine(cm.x+dx/len*r, cm.y+dy/len*r, dm.x-dx/len*26, dm.y-dy/len*14, connCls);
-}
-
-// Dim-to-role connector
-function dimRole(dimId, roleId, connCls) {
-  const dr = rc(dimId), rr = rc(roleId);
-  if (!dr||!rr) return;
-  const dm = mid(dr), rm = mid(rr);
-  addLine(dm.x, dm.y, rm.x, rm.y, connCls);
-}
-
-function draw() {
-  const svg = document.getElementById('svg-layer');
+function draw(){
+  const svg=document.getElementById('lines');
   [...svg.children].filter(c=>c.tagName!=='defs').forEach(k=>k.remove());
 
-  /* ── center → dims ── */
-  dimConnector('dim-supply',   'conn-supply');
-  dimConnector('dim-data',     'conn-data');
-  dimConnector('dim-strategy', 'conn-strategy');
+  const cx = innerWidth/2;
+  const cy = innerHeight*0.46;
+  const CR = 65; // center circle radius px
 
-  /* ══ 货源 ══ */
-  dimRole('dim-supply','rs-platform','conn-supply');
-  dimRole('dim-supply','rs-agent',   'conn-supply');
-  dimRole('dim-supply','rs-sales',   'conn-supply');
-  dimRole('dim-supply','rs-gtm',     'conn-supply');
+  const DIM_COLORS = {
+    d1:'rgba(0,229,160,0.22)', d2:'rgba(0,180,216,0.22)', d3:'rgba(245,197,24,0.22)',
+    d4:'rgba(255,107,53,0.22)',d5:'rgba(199,125,255,0.22)',d6:'rgba(255,110,180,0.22)',
+    d7:'rgba(0,212,200,0.22)', d8:'rgba(168,224,99,0.22)',
+  };
 
-  // Fwd: Platform → Sales
-  let r1=rc('rs-platform'), r2=rc('rs-sales');
-  if(r1&&r2) curve(r1.right, mid(r1).y, r2.left, mid(r2).y, 'flow-fwd','mf');
+  // Center → each dim
+  ['d1','d2','d3','d4','d5','d6','d7'].forEach(id=>{
+    const r=gb(id); if(!r) return;
+    const m=mid(r);
+    const dx=m.x-cx, dy=m.y-cy, len=Math.hypot(dx,dy);
+    const sx=cx+dx/len*CR, sy=cy+dy/len*CR;
+    const ex=m.x-dx/len*26, ey=m.y-dy/len*13;
+    addLine(sx,sy,ex,ey,``, 1);
+    // color the line
+    const l=document.getElementById('lines').lastChild;
+    l.setAttribute('style',`stroke:${DIM_COLORS[id]};stroke-width:1.1;`);
+  });
 
-  // Fwd: Sales → GTM
-  r1=rc('rs-sales'); r2=rc('rs-gtm');
-  if(r1&&r2) curve(r1.right, mid(r1).y, r2.left, mid(r2).y, 'flow-fwd','mf');
-
-  // Rev: GTM → Agent (断货风险)
-  r1=rc('rs-gtm'); r2=rc('rs-agent');
-  if(r1&&r2) {
-    const p1x=r1.left, p1y=r1.bottom+6, p2x=r2.right, p2y=mid(r2).y;
-    addPath(`M${p1x},${p1y} C${p1x},${p1y+50} ${p2x+50},${p2y} ${p2x},${p2y}`,'flow-rev','mr');
+  // dim8 connector (center → bottom)
+  const d8h=gb('d8h');
+  if(d8h){
+    const m=mid(d8h);
+    addLine(cx,cy+CR, m.x,m.y-d8h.height/2, '');
+    const l=document.getElementById('lines').lastChild;
+    l.setAttribute('style',`stroke:${DIM_COLORS['d8']};stroke-width:1.1;`);
   }
 
-  /* ══ 数据监控 ══ */
-  dimRole('dim-data','rd-platform','conn-data');
-  dimRole('dim-data','rd-ecom',   'conn-data');
-  dimRole('dim-data','rd-agent',  'conn-data');
-
-  // Fwd: Platform → Ecom (vertical left edge)
-  r1=rc('rd-platform'); r2=rc('rd-ecom');
-  if(r1&&r2) {
-    const x=r1.left-10;
-    addPath(`M${x},${r1.bottom} L${x},${r2.top}`,'flow-fwd','mf');
-  }
-  // Fwd: Ecom → Agent
-  r1=rc('rd-ecom'); r2=rc('rd-agent');
-  if(r1&&r2) {
-    const x=r1.left-10;
-    addPath(`M${x},${r1.bottom} L${x},${r2.top}`,'flow-fwd','mf');
-  }
-  // Rev: Agent → Platform (right side loop — 闭环)
-  r1=rc('rd-agent'); r2=rc('rd-platform');
-  if(r1&&r2) {
-    const x1=r1.right+10, y1=mid(r1).y, x2=r2.right+10, y2=mid(r2).y;
-    addPath(`M${x1},${y1} C${x1+34},${y1} ${x2+34},${y2} ${x2},${y2}`,'flow-rev','mr');
-    addText(x1+42, (y1+y2)/2, '闭环','rgba(255,71,87,0.38)');
+  // Dim → role connectors
+  const DIM_ROLE_CONN = {
+    d1:['d1r1','d1r2','d1r3','d1r4'],
+    d2:['d2r1','d2r2','d2r3'],
+    d3:['d3r1','d3r2','d3r3'],
+    d4:['d4r1','d4r2','d4r3'],
+    d5:['d5r1','d5r2'],
+    d6:['d6r1'],
+    d7:['d7r1','d7r2','d7r3'],
+  };
+  for(const [dim, roles] of Object.entries(DIM_ROLE_CONN)){
+    const dr=gb(dim); if(!dr) continue;
+    const dm=mid(dr);
+    roles.forEach(rid=>{
+      const rr=gb(rid); if(!rr) return;
+      const rm=mid(rr);
+      addLine(dm.x,dm.y,rm.x,rm.y,'');
+      const l=document.getElementById('lines').lastChild;
+      l.setAttribute('style',`stroke:${DIM_COLORS[dim]};stroke-width:0.8;opacity:0.7`);
+    });
   }
 
-  /* ══ 策略优化 ══ */
-  dimRole('dim-strategy','rg-platform','conn-strategy');
-  dimRole('dim-strategy','rg-ecom',   'conn-strategy');
-  dimRole('dim-strategy','rg-agent',  'conn-strategy');
+  /* ── Dim 1 flow arrows ── */
+  const d1p=gb('d1r1'),d1a=gb('d1r2'),d1s=gb('d1r3'),d1g=gb('d1r4');
+  if(d1p&&d1s) curveLine(d1p.right,mid(d1p).y,d1s.left,mid(d1s).y,'flow-fwd','mf');
+  if(d1s&&d1g) curveLine(d1s.right,mid(d1s).y,d1g.left,mid(d1g).y,'flow-fwd','mf');
+  if(d1g&&d1a){
+    const p1x=d1g.left,p1y=d1g.bottom+5,p2x=d1a.right,p2y=mid(d1a).y;
+    addPath(`M${p1x},${p1y} C${p1x-20},${p1y+40} ${p2x+40},${p2y} ${p2x},${p2y}`,'flow-rev','mr');
+  }
 
-  // Fwd: Platform → Ecom (right edge, downward)
-  r1=rc('rg-platform'); r2=rc('rg-ecom');
-  if(r1&&r2) {
-    const x=r1.right+10;
-    addPath(`M${x},${r1.bottom} L${x},${r2.top}`,'flow-fwd','mf');
+  /* ── Dim 2 flow arrows ── */
+  const d2p=gb('d2r1'),d2e=gb('d2r2'),d2a=gb('d2r3');
+  if(d2p&&d2e){ const x=d2p.left-9; addPath(`M${x},${d2p.bottom} L${x},${d2e.top}`,'flow-fwd','mf'); }
+  if(d2e&&d2a){ const x=d2e.left-9; addPath(`M${x},${d2e.bottom} L${x},${d2a.top}`,'flow-fwd','mf'); }
+  if(d2a&&d2p){
+    const x1=d2a.right+10,y1=mid(d2a).y,x2=d2p.right+10,y2=mid(d2p).y;
+    addPath(`M${x1},${y1} C${x1+32},${y1} ${x2+32},${y2} ${x2},${y2}`,'flow-rev','mr');
   }
-  // Rev: Ecom → Platform (left side loop)
-  r1=rc('rg-ecom'); r2=rc('rg-platform');
-  if(r1&&r2) {
-    const x1=r1.left-10, y1=mid(r1).y, x2=r2.left-10, y2=mid(r2).y;
-    addPath(`M${x1},${y1} C${x1-34},${y1} ${x2-34},${y2} ${x2},${y2}`,'flow-rev','mr');
+
+  /* ── Dim 3 flow arrows ── */
+  const d3p=gb('d3r1'),d3e=gb('d3r2'),d3a=gb('d3r3');
+  if(d3p&&d3e){ const x=d3p.right+9; addPath(`M${x},${d3p.bottom} L${x},${d3e.top}`,'flow-fwd','mf'); }
+  if(d3e&&d3a) curveLine(mid(d3e).x,d3e.bottom,mid(d3a).x,d3a.top,'flow-fwd','mf');
+  if(d3e&&d3p){
+    const x1=d3e.left-9,y1=mid(d3e).y,x2=d3p.left-9,y2=mid(d3p).y;
+    addPath(`M${x1},${y1} C${x1-32},${y1} ${x2-32},${y2} ${x2},${y2}`,'flow-rev','mr');
   }
-  // Fwd: Ecom → Agent
-  r1=rc('rg-ecom'); r2=rc('rg-agent');
-  if(r1&&r2) curve(mid(r1).x, r1.bottom, mid(r2).x, r2.top, 'flow-fwd','mf');
 }
 
-/* ═══════════════════════════════════════════════
-   TOOLTIP
-   ═══════════════════════════════════════════════ */
-const DATA = {
-  supply: {
-    title: '01 · 货源管理',
-    roles: [
-      { cls:'role-platform', name:'平台',     desc:'根据进销存报未来三月预测' },
-      { cls:'role-agent',    name:'代理',     desc:'承接资金物流平台，确保货款' },
-      { cls:'role-sales',    name:'DJI 销售', desc:'与 GTM / 产销锁预测中的货量' },
-      { cls:'role-gtm',      name:'GTM',      desc:'与产销根据 Otto 货量进行产能预警，判断断货节奏，提前与销售沟通' },
-    ],
-    flows: [
-      { type:'fwd', text:'代理提报 → 销售/电商运营传达 → GTM 与产销产能对接' },
-      { type:'rev', text:'GTM 根据预测与产能结果判断断货风险 → 传达电商 & 销售' },
-    ]
-  },
-  data: {
-    title: '02 · 数据监控（销量 / 广告）',
-    roles: [
-      { cls:'role-platform', name:'平台',    desc:'两周为维度提供销量 / 广告数据' },
-      { cls:'role-ecom',     name:'电商运营', desc:'数据分析，返回优化建议' },
-      { cls:'role-agent',    name:'代理',    desc:'推动平台落地优化建议' },
-    ],
-    flows: [
-      { type:'fwd', text:'平台发送原数据 → 电商分析 → 销售跟踪落地 → 平台执行 → 闭环' },
-    ]
-  },
-  strategy: {
-    title: '03 · 策略优化',
-    roles: [
-      { cls:'role-platform', name:'平台',    desc:'提供当前类目竞争态势，对比竞争对手参数差距（广告 / 销量 / 流量）' },
-      { cls:'role-ecom',     name:'电商运营', desc:'优化价促、打法，返回给平台' },
-      { cls:'role-agent',    name:'代理',    desc:'跟进平台落地' },
-    ],
-    flows: [
-      { type:'fwd', text:'平台提供数据 → 电商提供解决方案 → 代理跟进落地' },
-      { type:'rev', text:'电商优化方案反向输出给平台执行落地' },
-    ]
-  }
-};
-
-const TAG_COLOR = {
-  'role-platform':'var(--role-platform)',
-  'role-agent':'var(--role-agent)',
-  'role-sales':'var(--role-sales)',
-  'role-gtm':'var(--role-gtm)',
-  'role-ecom':'var(--role-ecom)',
-};
-
-function showTip(e, key) {
-  e.stopPropagation();
-  const d = DATA[key];
-  const tip = document.getElementById('tooltip');
-  const rolesHtml = d.roles.map(r=>`<div class="tt-role"><strong style="color:${TAG_COLOR[r.cls]||'#fff'}">${r.name}</strong>：${r.desc}</div>`).join('');
-  const flowsHtml = d.flows.map(f=>`<div style="margin-bottom:5px"><span class="badge badge-${f.type}">${f.type==='fwd'?'▶ 正向':'◀ 反向'}</span>${f.text}</div>`).join('');
-  tip.innerHTML = `
-    <div class="tt-title">${d.title}</div>
-    <div class="tt-section"><div class="tt-label">角色职责</div>${rolesHtml}</div>
-    <div class="tt-section"><div class="tt-label">流程</div>${flowsHtml}</div>
-  `;
-  const x = e.clientX + 18, y = e.clientY - 12;
-  tip.style.left = Math.min(x, window.innerWidth-320)+'px';
-  tip.style.top  = Math.max(10, Math.min(y, window.innerHeight-250))+'px';
-  tip.classList.add('show');
-}
-document.addEventListener('click', ()=>document.getElementById('tooltip').classList.remove('show'));
-
-/* ═══════════════════════════════════════════════
-   INIT & RESIZE
-   ═══════════════════════════════════════════════ */
-function render() {
+function render(){
   place();
-  // wait one frame for layout to settle, then draw SVG
-  requestAnimationFrame(draw);
+  requestAnimationFrame(()=>{ place(); requestAnimationFrame(draw); });
 }
 
-window.addEventListener('load', ()=>{ render(); setTimeout(draw,150); });
+window.addEventListener('load', ()=>{ render(); setTimeout(draw,200); });
 window.addEventListener('resize', render);
 </script>
 </body>
