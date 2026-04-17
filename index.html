@@ -7,7 +7,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
 
 :root {
-  --bg:#070b10; --grid:rgba(0,210,150,0.05);
+  --bg:#070b10;
   --green:#00e5a0; --red:#ff4757;
   --c1:#00e5a0; --c2:#00b4d8; --c3:#f5c518;
   --c4:#ff6b35; --c5:#c77dff; --c6:#ff6eb4;
@@ -21,195 +21,174 @@
 body{
   background:var(--bg);
   font-family:'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
-  width:100vw; height:100vh;
-  overflow:auto;
+  overflow:hidden; width:100vw; height:100vh;
 }
 
 body::before{
   content:'';position:fixed;inset:0;
-  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
-  background-size:52px 52px;z-index:0;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(0,210,150,0.045) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,210,150,0.045) 1px,transparent 1px);
+  background-size:50px 50px;pointer-events:none;z-index:0;
+}
+body::after{
+  content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse 50% 50% at 50% 45%,rgba(0,229,160,0.035) 0%,transparent 70%);
+  pointer-events:none;z-index:0;
 }
 
-/* ── VIEWPORT SCALER ── */
-/* We author on a 1600×960 canvas, then scale-to-fit the viewport */
-#stage-wrap {
-  width:100vw; height:100vh;
-  display:flex; align-items:center; justify-content:center;
-  position:relative; z-index:1;
-}
+/* ── STAGE: fixed 2000×1120 canvas scaled to viewport ── */
+#wrap{position:relative;width:100vw;height:100vh;z-index:1;}
+#stage{position:absolute;width:2000px;height:1120px;transform-origin:top left;}
 
-#stage {
-  position:relative;
-  width:1600px; height:940px;
-  flex-shrink:0;
-  transform-origin:top left;
-}
+svg#L{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2;}
 
-/* SVG overlay */
-#lines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2;}
-
-/* ── HEADER ── */
 .hdr{
-  position:absolute;top:14px;left:50%;transform:translateX(-50%);
-  font-family:'Orbitron',monospace;font-size:11px;font-weight:400;
-  color:rgba(0,229,160,0.32);letter-spacing:7px;white-space:nowrap;z-index:10;
+  position:absolute;top:16px;left:50%;transform:translateX(-50%);
+  font-family:'Orbitron',monospace;font-size:12px;font-weight:400;
+  color:rgba(0,229,160,0.3);letter-spacing:8px;white-space:nowrap;z-index:10;
 }
+.corner{position:absolute;width:30px;height:30px;opacity:0.18;}
+.tl{top:10px;left:10px;border-top:1px solid var(--green);border-left:1px solid var(--green);}
+.tr{top:10px;right:10px;border-top:1px solid var(--green);border-right:1px solid var(--green);}
+.bl{bottom:10px;left:10px;border-bottom:1px solid var(--green);border-left:1px solid var(--green);}
+.br{bottom:10px;right:10px;border-bottom:1px solid var(--green);border-right:1px solid var(--green);}
 
-/* corners */
-.corner{position:absolute;width:28px;height:28px;opacity:0.2;}
-.corner-tl{top:10px;left:10px;border-top:1px solid var(--green);border-left:1px solid var(--green);}
-.corner-tr{top:10px;right:10px;border-top:1px solid var(--green);border-right:1px solid var(--green);}
-.corner-bl{bottom:10px;left:10px;border-bottom:1px solid var(--green);border-left:1px solid var(--green);}
-.corner-br{bottom:10px;right:10px;border-bottom:1px solid var(--green);border-right:1px solid var(--green);}
-
-/* scanline */
-.scan{position:fixed;left:0;width:100%;height:2px;background:linear-gradient(transparent,rgba(0,229,160,0.02),transparent);animation:scan 12s linear infinite;pointer-events:none;z-index:300;}
+.scan{position:fixed;left:0;width:100%;height:2px;
+  background:linear-gradient(transparent,rgba(0,229,160,0.018),transparent);
+  animation:scan 14s linear infinite;pointer-events:none;z-index:300;}
 @keyframes scan{0%{top:-2px}100%{top:100%}}
 
 /* ── CENTER ── */
 .center{
-  position:absolute;width:120px;height:120px;border-radius:50%;
+  position:absolute;width:128px;height:128px;border-radius:50%;
   background:radial-gradient(circle,#0c2018 0%,#050e09 100%);
   border:2px solid var(--green);
-  box-shadow:0 0 0 6px rgba(0,229,160,0.06),0 0 28px rgba(0,229,160,0.28),0 0 70px rgba(0,229,160,0.07);
+  box-shadow:0 0 0 6px rgba(0,229,160,0.06),0 0 30px rgba(0,229,160,0.28),0 0 80px rgba(0,229,160,0.07);
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  z-index:10;transform:translate(-50%,-50%);
+  transform:translate(-50%,-50%);z-index:10;
   animation:pulse 3.5s ease-in-out infinite;
 }
 @keyframes pulse{
-  0%,100%{box-shadow:0 0 0 6px rgba(0,229,160,0.06),0 0 28px rgba(0,229,160,0.28),0 0 70px rgba(0,229,160,0.07);}
-  50%{box-shadow:0 0 0 11px rgba(0,229,160,0.04),0 0 44px rgba(0,229,160,0.34),0 0 100px rgba(0,229,160,0.1);}
+  0%,100%{box-shadow:0 0 0 6px rgba(0,229,160,0.06),0 0 30px rgba(0,229,160,0.28),0 0 80px rgba(0,229,160,0.07);}
+  50%{box-shadow:0 0 0 12px rgba(0,229,160,0.04),0 0 50px rgba(0,229,160,0.34),0 0 110px rgba(0,229,160,0.1);}
 }
-.c-en{font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:var(--green);letter-spacing:2px;text-shadow:0 0 10px rgba(0,229,160,0.55);}
-.c-zh{font-size:10px;color:rgba(0,229,160,0.5);letter-spacing:3px;margin-top:4px;}
-.c-sub{font-family:'Orbitron',monospace;font-size:7px;color:rgba(255,255,255,0.18);letter-spacing:2px;margin-top:2px;}
+.c-en{font-family:'Orbitron',monospace;font-size:20px;font-weight:900;color:var(--green);letter-spacing:2px;text-shadow:0 0 12px rgba(0,229,160,0.55);}
+.c-zh{font-size:10px;color:rgba(0,229,160,0.5);letter-spacing:3px;margin-top:5px;}
+.c-sub{font-family:'Orbitron',monospace;font-size:7px;color:rgba(255,255,255,0.18);letter-spacing:2px;margin-top:3px;}
 
 /* ── DIM NODE ── */
-.dim{
-  position:absolute;transform:translate(-50%,-50%);
-  z-index:8;cursor:pointer;
-}
+.dim{position:absolute;transform:translate(-50%,-50%);z-index:8;cursor:pointer;}
 .dim-box{
-  padding:6px 13px;border-radius:4px;border:1.5px solid;
+  padding:7px 15px;border-radius:4px;border:1.5px solid;
   font-size:12px;font-weight:700;letter-spacing:1.5px;text-align:center;
   background:rgba(7,11,16,0.96);backdrop-filter:blur(6px);
   transition:transform 0.2s;position:relative;overflow:hidden;white-space:nowrap;
 }
 .dim-box::after{content:'';position:absolute;inset:0;background:currentColor;opacity:0.07;}
 .dim:hover .dim-box{transform:scale(1.07);}
-.dnum{font-family:'Orbitron',monospace;font-size:8px;opacity:0.45;letter-spacing:1px;margin-bottom:2px;}
-.dsub{font-size:9px;opacity:0.6;margin-top:2px;}
+.dn{font-family:'Orbitron',monospace;font-size:8px;opacity:0.4;letter-spacing:1px;margin-bottom:2px;}
+.ds{font-size:9px;opacity:0.6;margin-top:2px;}
 
 /* ── ROLE CARD ── */
 .rc{
   position:absolute;transform:translate(-50%,-50%);
   background:rgba(7,11,16,0.96);border:1px solid rgba(255,255,255,0.07);
-  border-radius:5px;padding:7px 10px;width:142px;
+  border-radius:5px;padding:8px 11px;width:148px;
   z-index:7;backdrop-filter:blur(8px);
   transition:transform 0.18s,border-color 0.18s;
 }
-.rc:hover{transform:translate(-50%,-54%);z-index:25;}
-.rc-tag{display:inline-block;font-size:9px;font-weight:700;letter-spacing:1px;padding:2px 6px;border-radius:2px;margin-bottom:4px;font-family:'Orbitron',monospace;}
-.rc-desc{font-size:10px;color:rgba(255,255,255,0.5);line-height:1.55;}
+.rc:hover{transform:translate(-50%,-55%);z-index:25;}
+.rt{display:inline-block;font-size:9px;font-weight:700;letter-spacing:1px;
+  padding:2px 7px;border-radius:2px;margin-bottom:5px;font-family:'Orbitron',monospace;}
+.rd{font-size:10px;color:rgba(255,255,255,0.5);line-height:1.58;}
 
-.rp{border-color:rgba(0,229,160,0.22);}    .rp .rc-tag{background:rgba(0,229,160,0.1);color:var(--rp);}   .rp:hover{border-color:rgba(0,229,160,0.5);}
-.ra{border-color:rgba(245,197,24,0.22);}   .ra .rc-tag{background:rgba(245,197,24,0.1);color:var(--ra);}  .ra:hover{border-color:rgba(245,197,24,0.5);}
-.rs{border-color:rgba(0,180,216,0.22);}    .rs .rc-tag{background:rgba(0,180,216,0.1);color:var(--rs);}   .rs:hover{border-color:rgba(0,180,216,0.5);}
-.rg{border-color:rgba(255,107,53,0.22);}   .rg .rc-tag{background:rgba(255,107,53,0.1);color:var(--rg);}  .rg:hover{border-color:rgba(255,107,53,0.5);}
-.re{border-color:rgba(199,125,255,0.22);}  .re .rc-tag{background:rgba(199,125,255,0.1);color:var(--re);} .re:hover{border-color:rgba(199,125,255,0.5);}
-.rm{border-color:rgba(255,110,180,0.22);}  .rm .rc-tag{background:rgba(255,110,180,0.1);color:var(--rm);} .rm:hover{border-color:rgba(255,110,180,0.5);}
+.rp{border-color:rgba(0,229,160,0.22);}    .rp .rt{background:rgba(0,229,160,0.1);color:var(--rp);}   .rp:hover{border-color:rgba(0,229,160,0.5);}
+.ra{border-color:rgba(245,197,24,0.22);}   .ra .rt{background:rgba(245,197,24,0.1);color:var(--ra);}  .ra:hover{border-color:rgba(245,197,24,0.5);}
+.rs{border-color:rgba(0,180,216,0.22);}    .rs .rt{background:rgba(0,180,216,0.1);color:var(--rs);}   .rs:hover{border-color:rgba(0,180,216,0.5);}
+.rg{border-color:rgba(255,107,53,0.22);}   .rg .rt{background:rgba(255,107,53,0.1);color:var(--rg);}  .rg:hover{border-color:rgba(255,107,53,0.5);}
+.re{border-color:rgba(199,125,255,0.22);}  .re .rt{background:rgba(199,125,255,0.1);color:var(--re);} .re:hover{border-color:rgba(199,125,255,0.5);}
+.rm{border-color:rgba(255,110,180,0.22);}  .rm .rt{background:rgba(255,110,180,0.1);color:var(--rm);} .rm:hover{border-color:rgba(255,110,180,0.5);}
 
-/* ── SVG lines ── */
-.conn{stroke-width:1;fill:none;}
-.flow-fwd{stroke:rgba(0,229,160,0.65);stroke-width:1.4;fill:none;stroke-dasharray:6 4;animation:dfwd 1.8s linear infinite;}
-.flow-rev{stroke:rgba(255,71,87,0.65);stroke-width:1.4;fill:none;stroke-dasharray:6 4;animation:drev 1.8s linear infinite;}
+/* ── SVG ── */
+.flow-fwd{stroke:rgba(0,229,160,0.65);stroke-width:1.5;fill:none;stroke-dasharray:6 4;animation:dfwd 1.8s linear infinite;}
+.flow-rev{stroke:rgba(255,71,87,0.65);stroke-width:1.5;fill:none;stroke-dasharray:6 4;animation:drev 1.8s linear infinite;}
 @keyframes dfwd{from{stroke-dashoffset:0}to{stroke-dashoffset:-40}}
 @keyframes drev{from{stroke-dashoffset:0}to{stroke-dashoffset:40}}
-.mf{fill:rgba(0,229,160,0.9);} .mr{fill:rgba(255,71,87,0.9);}
+.mf{fill:rgba(0,229,160,0.88);} .mr{fill:rgba(255,71,87,0.88);}
 
-/* ── TIMELINE ── */
-.tl-wrap{
-  position:absolute;transform:translateX(-50%);
-  display:flex;align-items:flex-start;gap:0;
-}
-.tl-node{display:flex;flex-direction:column;align-items:center;width:162px;}
-.tl-card{
-  width:148px;padding:6px 8px;border-radius:4px;
-  border:1px solid rgba(168,224,99,0.22);
-  background:rgba(7,11,16,0.96);backdrop-filter:blur(6px);
-  text-align:center;
-}
-.tl-step-label{font-size:10px;font-weight:700;color:var(--c8);letter-spacing:1px;}
-.tl-step-roles{font-size:9px;color:rgba(255,255,255,0.38);margin-top:3px;line-height:1.4;}
-.tl-stem{width:1px;height:12px;background:rgba(168,224,99,0.2);margin:0 auto;}
-.tl-dot{width:8px;height:8px;border-radius:50%;background:var(--c8);box-shadow:0 0 6px rgba(168,224,99,0.5);margin:0 auto;}
-.tl-arrow{flex:1;height:1px;background:rgba(168,224,99,0.2);margin-top:28px;position:relative;align-self:auto;}
-.tl-arrow::after{content:'';position:absolute;right:-4px;top:-3px;border:3px solid transparent;border-left:5px solid rgba(168,224,99,0.4);}
-
-.dim8-label{
-  position:absolute;transform:translate(-50%,-50%);z-index:8;cursor:pointer;text-align:center;
-}
-.dim8-box{
-  padding:6px 18px;border-radius:4px;border:1.5px solid var(--c8);color:var(--c8);
+/* ── TIMELINE (D8) ── */
+.dim8h{position:absolute;transform:translate(-50%,-50%);z-index:8;cursor:pointer;text-align:center;}
+.dim8box{
+  padding:7px 20px;border-radius:4px;border:1.5px solid var(--c8);color:var(--c8);
   font-size:12px;font-weight:700;letter-spacing:1.5px;
   background:rgba(7,11,16,0.96);backdrop-filter:blur(6px);
-  box-shadow:0 0 14px rgba(168,224,99,0.14);position:relative;overflow:hidden;
+  box-shadow:0 0 16px rgba(168,224,99,0.14);position:relative;overflow:hidden;
 }
-.dim8-box::after{content:'';position:absolute;inset:0;background:var(--c8);opacity:0.07;}
+.dim8box::after{content:'';position:absolute;inset:0;background:var(--c8);opacity:0.07;}
+
+.tlwrap{
+  position:absolute;transform:translateX(-50%);
+  display:flex;align-items:flex-start;
+}
+.tln{display:flex;flex-direction:column;align-items:center;width:155px;}
+.tlcard{
+  width:140px;padding:7px 8px;border-radius:4px;text-align:center;
+  border:1px solid rgba(168,224,99,0.2);
+  background:rgba(7,11,16,0.96);backdrop-filter:blur(6px);
+}
+.tll{font-size:10px;font-weight:700;color:var(--c8);letter-spacing:1px;}
+.tlr{font-size:9px;color:rgba(255,255,255,0.36);margin-top:3px;line-height:1.4;}
+.tlstem{width:1px;height:12px;background:rgba(168,224,99,0.2);margin:0 auto;}
+.tldot{width:8px;height:8px;border-radius:50%;background:var(--c8);box-shadow:0 0 6px rgba(168,224,99,0.5);margin:0 auto;}
+.tlarr{flex:1;height:1px;background:rgba(168,224,99,0.2);margin-top:30px;position:relative;}
+.tlarr::after{content:'';position:absolute;right:-4px;top:-3px;border:3px solid transparent;border-left:5px solid rgba(168,224,99,0.38);}
 
 /* ── LEGEND ── */
 .legend{
   position:absolute;bottom:18px;left:18px;z-index:20;
-  background:rgba(7,11,16,0.92);border:1px solid rgba(0,229,160,0.1);
-  border-radius:6px;padding:11px 14px;backdrop-filter:blur(8px);
+  background:rgba(7,11,16,0.93);border:1px solid rgba(0,229,160,0.1);
+  border-radius:6px;padding:12px 15px;backdrop-filter:blur(8px);
 }
-.lg-t{font-family:'Orbitron',monospace;font-size:7px;color:rgba(255,255,255,0.2);letter-spacing:2px;margin-bottom:8px;}
-.lg-g{margin-bottom:7px;}
-.lg-gl{font-size:8px;color:rgba(255,255,255,0.2);letter-spacing:1px;margin-bottom:4px;}
-.lg-r{display:flex;align-items:center;gap:6px;font-size:10px;color:rgba(255,255,255,0.44);margin-bottom:3px;}
-.lg-d{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
-.lg-l{width:22px;height:2px;border-radius:1px;flex-shrink:0;}
+.lgt{font-family:'Orbitron',monospace;font-size:7px;color:rgba(255,255,255,0.2);letter-spacing:2px;margin-bottom:9px;}
+.lgg{margin-bottom:8px;}
+.lggl{font-size:8px;color:rgba(255,255,255,0.2);letter-spacing:1px;margin-bottom:4px;}
+.lgr{display:flex;align-items:center;gap:6px;font-size:10px;color:rgba(255,255,255,0.44);margin-bottom:3px;}
+.lgd{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.lgl{width:22px;height:2px;border-radius:1px;flex-shrink:0;}
 
 /* ── TOOLTIP ── */
 .tip{
   position:fixed;background:rgba(7,11,16,0.98);border:1px solid rgba(0,229,160,0.25);
-  border-radius:7px;padding:13px 16px;max-width:295px;z-index:1000;
+  border-radius:7px;padding:13px 16px;max-width:295px;z-index:2000;
   opacity:0;pointer-events:none;transition:opacity 0.15s;
-  font-size:11px;line-height:1.7;color:rgba(255,255,255,0.6);
+  font-size:11px;line-height:1.72;color:rgba(255,255,255,0.62);
 }
 .tip.show{opacity:1;}
-.tt{font-family:'Orbitron',monospace;font-size:10px;color:var(--green);letter-spacing:1px;margin-bottom:8px;font-weight:700;}
-.ts{margin-bottom:7px;}
-.tl{font-size:8px;color:rgba(255,255,255,0.24);letter-spacing:1.5px;margin-bottom:3px;}
+.tit{font-family:'Orbitron',monospace;font-size:10px;color:var(--green);letter-spacing:1px;margin-bottom:8px;font-weight:700;}
+.tis{margin-bottom:7px;}
+.til{font-size:8px;color:rgba(255,255,255,0.24);letter-spacing:1.5px;margin-bottom:3px;}
 .badge{display:inline-block;font-size:8px;padding:1px 6px;border-radius:2px;margin-right:3px;font-weight:600;}
 .bf{background:rgba(0,229,160,0.14);color:var(--green);}
-.br{background:rgba(255,71,87,0.14);color:var(--red);}
-.hint{position:absolute;bottom:18px;right:18px;font-size:9px;color:rgba(255,255,255,0.14);letter-spacing:1px;z-index:20;}
+.br2{background:rgba(255,71,87,0.14);color:var(--red);}
+.hint2{position:absolute;bottom:18px;right:18px;font-size:9px;color:rgba(255,255,255,0.14);letter-spacing:1px;z-index:20;}
 </style>
 </head>
 <body>
 <div class="scan"></div>
-
-<div id="stage-wrap">
+<div id="wrap">
 <div id="stage">
 
 <div class="hdr">OTTO · BATTLE MAP · 作战地图</div>
-<div class="corner corner-tl"></div><div class="corner corner-tr"></div>
-<div class="corner corner-bl"></div><div class="corner corner-br"></div>
+<div class="corner tl"></div><div class="corner tr"></div>
+<div class="corner bl"></div><div class="corner br"></div>
 
-<svg id="lines" xmlns="http://www.w3.org/2000/svg">
+<svg id="L" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <marker id="mf" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><polygon points="0 0,6 3,0 6" class="mf"/></marker>
     <marker id="mr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><polygon points="0 0,6 3,0 6" class="mr"/></marker>
   </defs>
 </svg>
-
-<!-- ══════════════════════════════════════════════
-     ALL ELEMENTS — positions set by JS using
-     absolute px on a 1600×960 canvas
-     Center anchor: cx=800, cy=400
-═══════════════════════════════════════════════ -->
 
 <!-- CENTER -->
 <div class="center" id="ctr">
@@ -218,309 +197,276 @@ body::before{
   <div class="c-sub">BATTLE MAP</div>
 </div>
 
-<!-- ═══ DIM 1: 货源  (upper-left quadrant) ═══ -->
-<div class="dim" id="d1" onclick="showTip(event,'d1')">
+<!-- ═══ D1: 货源  upper-left ═══ -->
+<div class="dim" id="d1" onclick="T(event,'d1')">
   <div class="dim-box" style="border-color:var(--c1);color:var(--c1);box-shadow:0 0 14px rgba(0,229,160,0.15)">
-    <div class="dnum">01 · SUPPLY</div>货&nbsp;&nbsp;源
+    <div class="dn">01 · SUPPLY</div>货&nbsp;&nbsp;源
   </div>
 </div>
-<div class="rc rp" id="d1r1"><span class="rc-tag">平台</span><div class="rc-desc">根据进销存报未来三月预测</div></div>
-<div class="rc ra" id="d1r2"><span class="rc-tag">代理</span><div class="rc-desc">承接资金物流，确保货款</div></div>
-<div class="rc rs" id="d1r3"><span class="rc-tag">DJI 销售</span><div class="rc-desc">与 GTM/产销锁预测中的货量</div></div>
-<div class="rc rg" id="d1r4"><span class="rc-tag">GTM</span><div class="rc-desc">产能预警，断货节奏预判，提前与销售沟通</div></div>
+<div class="rc rp" id="d1r1"><span class="rt">平台</span><div class="rd">根据进销存报未来三月预测</div></div>
+<div class="rc ra" id="d1r2"><span class="rt">代理</span><div class="rd">承接资金物流，确保货款</div></div>
+<div class="rc rs" id="d1r3"><span class="rt">DJI 销售</span><div class="rd">与 GTM/产销锁预测中的货量</div></div>
+<div class="rc rg" id="d1r4"><span class="rt">GTM</span><div class="rd">产能预警，断货节奏预判，提前与销售沟通</div></div>
 
-<!-- ═══ DIM 2: 数据监控  (right) ═══ -->
-<div class="dim" id="d2" onclick="showTip(event,'d2')">
+<!-- ═══ D2: 数据监控  right ═══ -->
+<div class="dim" id="d2" onclick="T(event,'d2')">
   <div class="dim-box" style="border-color:var(--c2);color:var(--c2);box-shadow:0 0 14px rgba(0,180,216,0.15)">
-    <div class="dnum">02 · MONITOR</div>数据监控<div class="dsub">销量 / 广告</div>
+    <div class="dn">02 · MONITOR</div>数据监控<div class="ds">销量 / 广告</div>
   </div>
 </div>
-<div class="rc rp" id="d2r1"><span class="rc-tag">平台</span><div class="rc-desc">两周为维度提供销量/广告数据</div></div>
-<div class="rc re" id="d2r2"><span class="rc-tag">电商</span><div class="rc-desc">数据分析，返回优化建议</div></div>
-<div class="rc ra" id="d2r3"><span class="rc-tag">代理</span><div class="rc-desc">推动平台落地优化建议</div></div>
+<div class="rc rp" id="d2r1"><span class="rt">平台</span><div class="rd">两周为维度提供销量/广告数据</div></div>
+<div class="rc re" id="d2r2"><span class="rt">电商</span><div class="rd">数据分析，返回优化建议</div></div>
+<div class="rc ra" id="d2r3"><span class="rt">代理</span><div class="rd">推动平台落地优化建议</div></div>
 
-<!-- ═══ DIM 3: 策略优化  (lower-right) ═══ -->
-<div class="dim" id="d3" onclick="showTip(event,'d3')">
+<!-- ═══ D3: 策略优化  lower-right ═══ -->
+<div class="dim" id="d3" onclick="T(event,'d3')">
   <div class="dim-box" style="border-color:var(--c3);color:var(--c3);box-shadow:0 0 14px rgba(245,197,24,0.15)">
-    <div class="dnum">03 · STRATEGY</div>策略优化
+    <div class="dn">03 · STRATEGY</div>策略优化
   </div>
 </div>
-<div class="rc rp" id="d3r1"><span class="rc-tag">平台</span><div class="rc-desc">提供类目竞争态势，对比竞对参数差距</div></div>
-<div class="rc re" id="d3r2"><span class="rc-tag">电商</span><div class="rc-desc">优化价促、打法，返回给平台</div></div>
-<div class="rc ra" id="d3r3"><span class="rc-tag">代理</span><div class="rc-desc">跟进平台落地</div></div>
+<div class="rc rp" id="d3r1"><span class="rt">平台</span><div class="rd">提供类目竞争态势，对比竞对参数差距</div></div>
+<div class="rc re" id="d3r2"><span class="rt">电商</span><div class="rd">优化价促、打法，返回给平台</div></div>
+<div class="rc ra" id="d3r3"><span class="rt">代理</span><div class="rd">跟进平台落地</div></div>
 
-<!-- ═══ DIM 4: 周会机制  (upper-right) ═══ -->
-<div class="dim" id="d4" onclick="showTip(event,'d4')">
+<!-- ═══ D4: 周会机制  upper-right ═══ -->
+<div class="dim" id="d4" onclick="T(event,'d4')">
   <div class="dim-box" style="border-color:var(--c4);color:var(--c4);box-shadow:0 0 14px rgba(255,107,53,0.15)">
-    <div class="dnum">04 · WEEKLY</div>周会机制
+    <div class="dn">04 · WEEKLY</div>周会机制
   </div>
 </div>
-<div class="rc rg" id="d4r1"><span class="rc-tag">GTM + 电商</span><div class="rc-desc">同步货源节奏</div></div>
-<div class="rc rs" id="d4r2"><span class="rc-tag">销售</span><div class="rc-desc">同步代理打款进度，库存情况</div></div>
-<div class="rc re" id="d4r3"><span class="rc-tag">GTM+电商+销售</span><div class="rc-desc">上周策略落地情况复盘</div></div>
+<div class="rc rg" id="d4r1"><span class="rt">GTM + 电商</span><div class="rd">同步货源节奏</div></div>
+<div class="rc rs" id="d4r2"><span class="rt">销售</span><div class="rd">同步代理打款进度，库存情况</div></div>
+<div class="rc re" id="d4r3"><span class="rt">GTM+电商+销售</span><div class="rd">上周策略落地情况复盘</div></div>
 
-<!-- ═══ DIM 5: 日常巡检  (left) ═══ -->
-<div class="dim" id="d5" onclick="showTip(event,'d5')">
+<!-- ═══ D5: 日常巡检  left ═══ -->
+<div class="dim" id="d5" onclick="T(event,'d5')">
   <div class="dim-box" style="border-color:var(--c5);color:var(--c5);box-shadow:0 0 14px rgba(199,125,255,0.15)">
-    <div class="dnum">05 · PATROL</div>日常巡检<div class="dsub">价格 / 权益</div>
+    <div class="dn">05 · PATROL</div>日常巡检<div class="ds">价格 / 权益</div>
   </div>
 </div>
-<div class="rc re" id="d5r1"><span class="rc-tag">电商</span><div class="rc-desc">价格自动巡检</div></div>
-<div class="rc rs" id="d5r2"><span class="rc-tag">销售</span><div class="rc-desc">跟进货源情况</div></div>
+<div class="rc re" id="d5r1"><span class="rt">电商</span><div class="rd">价格自动巡检</div></div>
+<div class="rc rs" id="d5r2"><span class="rt">销售</span><div class="rd">跟进货源情况</div></div>
 
-<!-- ═══ DIM 6: 大促日历  (lower-left) ═══ -->
-<div class="dim" id="d6" onclick="showTip(event,'d6')">
+<!-- ═══ D6: 大促日历  lower-left ═══ -->
+<div class="dim" id="d6" onclick="T(event,'d6')">
   <div class="dim-box" style="border-color:var(--c6);color:var(--c6);box-shadow:0 0 14px rgba(255,110,180,0.15)">
-    <div class="dnum">06 · PROMO</div>大促日历
+    <div class="dn">06 · PROMO</div>大促日历
   </div>
 </div>
-<div class="rc rp" id="d6r1"><span class="rc-tag">平台</span><div class="rc-desc">提前8周确认主推大促节点，发起 Deal Sourcing</div></div>
+<div class="rc rp" id="d6r1"><span class="rt">平台</span><div class="rd">提前8周确认主推大促节点，发起 Deal Sourcing</div></div>
 
-<!-- ═══ DIM 7: 年框敲定  (upper) ═══ -->
-<div class="dim" id="d7" onclick="showTip(event,'d7')">
+<!-- ═══ D7: 年框敲定  top-center ═══ -->
+<div class="dim" id="d7" onclick="T(event,'d7')">
   <div class="dim-box" style="border-color:var(--c7);color:var(--c7);box-shadow:0 0 14px rgba(0,212,200,0.15)">
-    <div class="dnum">07 · ANNUAL</div>年框敲定
+    <div class="dn">07 · ANNUAL</div>年框敲定
   </div>
 </div>
-<div class="rc rg" id="d7r1"><span class="rc-tag">GTM + MKT</span><div class="rc-desc">主导统筹资源，年度策略及资源对投</div></div>
-<div class="rc rp" id="d7r2"><span class="rc-tag">平台</span><div class="rc-desc">首页 Banner、大促落地页导流，类目流量倾斜</div></div>
-<div class="rc rm" id="d7r3"><span class="rc-tag">电商+MKT+代理</span><div class="rc-desc">平台资源包采买，站外 MKT 资源</div></div>
+<div class="rc rg" id="d7r1"><span class="rt">GTM + MKT</span><div class="rd">主导统筹资源，年度策略及资源对投</div></div>
+<div class="rc rp" id="d7r2"><span class="rt">平台</span><div class="rd">首页 Banner、大促落地页导流，类目流量倾斜</div></div>
+<div class="rc rm" id="d7r3"><span class="rt">电商+MKT+代理</span><div class="rd">平台资源包采买，站外 MKT 资源</div></div>
 
-<!-- ═══ DIM 8: 组织/节奏  (bottom timeline) ═══ -->
-<div class="dim8-label" id="d8h" onclick="showTip(event,'d8')">
-  <div class="dim8-box"><div class="dnum" style="color:var(--c8)">08 · RHYTHM</div>组织 / 节奏</div>
+<!-- ═══ D8: 组织/节奏  bottom timeline ═══ -->
+<div class="dim8h" id="d8h" onclick="T(event,'d8')">
+  <div class="dim8box"><div class="dn" style="color:var(--c8)">08 · RHYTHM</div>组织 / 节奏</div>
 </div>
-
-<div class="tl-wrap" id="tl">
-  <div class="tl-node">
-    <div class="tl-card"><div class="tl-step-label">市场洞察</div><div class="tl-step-roles">电商</div></div>
-    <div class="tl-stem"></div><div class="tl-dot"></div>
-  </div>
-  <div class="tl-arrow"></div>
-  <div class="tl-node">
-    <div class="tl-card"><div class="tl-step-label">品牌定位</div><div class="tl-step-roles">电商 + 销售</div></div>
-    <div class="tl-stem"></div><div class="tl-dot"></div>
-  </div>
-  <div class="tl-arrow"></div>
-  <div class="tl-node">
-    <div class="tl-card"><div class="tl-step-label">选品 / 定价</div><div class="tl-step-roles">GTM</div></div>
-    <div class="tl-stem"></div><div class="tl-dot"></div>
-  </div>
-  <div class="tl-arrow"></div>
-  <div class="tl-node">
-    <div class="tl-card"><div class="tl-step-label">内容种草</div><div class="tl-step-roles">MKT + 电商</div></div>
-    <div class="tl-stem"></div><div class="tl-dot"></div>
-  </div>
-  <div class="tl-arrow"></div>
-  <div class="tl-node">
-    <div class="tl-card"><div class="tl-step-label">流量收割</div><div class="tl-step-roles">电商 + 平台</div></div>
-    <div class="tl-stem"></div><div class="tl-dot"></div>
-  </div>
-  <div class="tl-arrow"></div>
-  <div class="tl-node">
-    <div class="tl-card"><div class="tl-step-label">履约交付</div><div class="tl-step-roles">电商+销售+平台+代理</div></div>
-    <div class="tl-stem"></div><div class="tl-dot"></div>
-  </div>
-  <div class="tl-arrow"></div>
-  <div class="tl-node">
-    <div class="tl-card"><div class="tl-step-label">用户留存</div><div class="tl-step-roles">电商 + 平台</div></div>
-    <div class="tl-stem"></div><div class="tl-dot"></div>
-  </div>
-  <div class="tl-arrow"></div>
-  <div class="tl-node">
-    <div class="tl-card"><div class="tl-step-label">数据复盘</div><div class="tl-step-roles">电商 + 平台</div></div>
-    <div class="tl-stem"></div>
-    <div class="tl-dot" style="background:var(--c8);box-shadow:0 0 10px rgba(168,224,99,0.7)"></div>
-  </div>
+<div class="tlwrap" id="tl">
+  <div class="tln"><div class="tlcard"><div class="tll">市场洞察</div><div class="tlr">电商</div></div><div class="tlstem"></div><div class="tldot"></div></div>
+  <div class="tlarr"></div>
+  <div class="tln"><div class="tlcard"><div class="tll">品牌定位</div><div class="tlr">电商 + 销售</div></div><div class="tlstem"></div><div class="tldot"></div></div>
+  <div class="tlarr"></div>
+  <div class="tln"><div class="tlcard"><div class="tll">选品 / 定价</div><div class="tlr">GTM</div></div><div class="tlstem"></div><div class="tldot"></div></div>
+  <div class="tlarr"></div>
+  <div class="tln"><div class="tlcard"><div class="tll">内容种草</div><div class="tlr">MKT + 电商</div></div><div class="tlstem"></div><div class="tldot"></div></div>
+  <div class="tlarr"></div>
+  <div class="tln"><div class="tlcard"><div class="tll">流量收割</div><div class="tlr">电商 + 平台</div></div><div class="tlstem"></div><div class="tldot"></div></div>
+  <div class="tlarr"></div>
+  <div class="tln"><div class="tlcard"><div class="tll">履约交付</div><div class="tlr">电商+销售+平台+代理</div></div><div class="tlstem"></div><div class="tldot"></div></div>
+  <div class="tlarr"></div>
+  <div class="tln"><div class="tlcard"><div class="tll">用户留存</div><div class="tlr">电商 + 平台</div></div><div class="tlstem"></div><div class="tldot"></div></div>
+  <div class="tlarr"></div>
+  <div class="tln"><div class="tlcard"><div class="tll">数据复盘</div><div class="tlr">电商 + 平台</div></div><div class="tlstem"></div><div class="tldot" style="box-shadow:0 0 10px rgba(168,224,99,0.7)"></div></div>
 </div>
 
 <!-- Legend -->
 <div class="legend">
-  <div class="lg-t">LEGEND · 图例</div>
-  <div class="lg-g">
-    <div class="lg-gl">角色</div>
-    <div class="lg-r"><div class="lg-d" style="background:var(--rp)"></div>平台</div>
-    <div class="lg-r"><div class="lg-d" style="background:var(--ra)"></div>代理</div>
-    <div class="lg-r"><div class="lg-d" style="background:var(--rs)"></div>DJI 销售</div>
-    <div class="lg-r"><div class="lg-d" style="background:var(--rg)"></div>GTM</div>
-    <div class="lg-r"><div class="lg-d" style="background:var(--re)"></div>电商</div>
-    <div class="lg-r"><div class="lg-d" style="background:var(--rm)"></div>MKT</div>
+  <div class="lgt">LEGEND · 图例</div>
+  <div class="lgg"><div class="lggl">角色</div>
+    <div class="lgr"><div class="lgd" style="background:var(--rp)"></div>平台</div>
+    <div class="lgr"><div class="lgd" style="background:var(--ra)"></div>代理</div>
+    <div class="lgr"><div class="lgd" style="background:var(--rs)"></div>DJI 销售</div>
+    <div class="lgr"><div class="lgd" style="background:var(--rg)"></div>GTM</div>
+    <div class="lgr"><div class="lgd" style="background:var(--re)"></div>电商</div>
+    <div class="lgr"><div class="lgd" style="background:var(--rm)"></div>MKT</div>
   </div>
-  <div class="lg-g">
-    <div class="lg-gl">流程</div>
-    <div class="lg-r"><div class="lg-l" style="background:linear-gradient(90deg,rgba(0,229,160,0.3),var(--green))"></div>正向</div>
-    <div class="lg-r"><div class="lg-l" style="background:linear-gradient(90deg,rgba(255,71,87,0.3),var(--red))"></div>反向</div>
+  <div class="lgg"><div class="lggl">流程</div>
+    <div class="lgr"><div class="lgl" style="background:linear-gradient(90deg,rgba(0,229,160,0.3),var(--green))"></div>正向</div>
+    <div class="lgr"><div class="lgl" style="background:linear-gradient(90deg,rgba(255,71,87,0.3),var(--red))"></div>反向</div>
   </div>
 </div>
-<div class="hint">点击维度节点查看详情</div>
+<div class="hint2">点击维度节点查看详情</div>
 
-</div><!-- #stage -->
-</div><!-- #stage-wrap -->
-
+</div></div>
 <div class="tip" id="tip"></div>
 
 <script>
-/* ═══════════════════════════════════════════════════
-   FIXED CANVAS COORDINATES  (1600 × 960)
-   Center of radial map: cx=800, cy=390
+/* ════════════════════════════════════════════════════════
+   CANVAS: 2000 × 1120
+   Center (CX,CY): 1000, 460   ← radial map center
 
-   Layout zones:
-     Upper-left  → D1 货源      (dim + 4 cards fanning left/up)
-     Right       → D2 数据监控  (dim + 3 cards stacked right)
-     Lower-right → D3 策略优化  (dim + 3 cards stacked below-right)
-     Upper-right → D4 周会机制  (dim + 3 cards stacked right)
-     Left        → D5 日常巡检  (dim + 2 cards stacked left)
-     Lower-left  → D6 大促日历  (dim + 1 card below)
-     Top         → D7 年框敲定  (dim + 3 cards fanning top)
-     Bottom      → D8 timeline
-═══════════════════════════════════════════════════ */
+   ZONE MAP (no-overlap grid):
+   ┌──────────┬──────────┬──────────┬──────────┐
+   │ D7 top   │ D7 cards │ D7 cards │          │  y: 40–200
+   ├──────────┼──────────┼──────────┼──────────┤
+   │ D1 cards │ D1 dim   │ D4 dim   │ D4 cards │  y:200–380
+   ├──────────┼──────────┼──────────┼──────────┤
+   │ D5 cards │ D5 dim   │ CENTER   │ D2 dim   │ D2 cards │ y:380–540
+   ├──────────┼──────────┼──────────┼──────────┤
+   │ D6 cards │ D6 dim   │ D3 dim   │ D3 cards │  y:540–700
+   ├──────────┼──────────┼──────────┴──────────┤
+   │          │  D8 header + timeline           │  y:760–1080
+   └──────────┴─────────────────────────────────┘
 
-const CX = 800, CY = 400;
+   Card width=148px, height≈58px (auto)
+   Row spacing = 100px between card centers
+   Col spacing = 180px between card center columns
+════════════════════════════════════════════════════════ */
 
-// Each entry: [left, top]  (center of element on 1600×960 canvas)
-// All clusters pulled ~30% closer to center vs previous version
-const POS = {
-  ctr:  [CX, CY],
+const CX=1000, CY=460;
 
-  // ── D1 货源  upper-left cluster ──
-  d1:   [580, 248],   // dim node  (was 490,200 → closer)
-  d1r1: [390, 158],   // 平台
-  d1r2: [390, 258],   // 代理
-  d1r3: [600, 145],   // DJI销售
-  d1r4: [750, 145],   // GTM
+// All [x, y] are center-points on the 2000×1120 canvas
+const P = {
+  ctr: [CX, CY],
 
-  // ── D2 数据监控  right cluster ──
-  d2:   [1020, 320],  // dim node  (was 1110,310)
-  d2r1: [1210, 228],  // 平台
-  d2r2: [1210, 338],  // 电商
-  d2r3: [1210, 446],  // 代理
+  /* ─── D1 货源  (upper-left, angled ~135°) ─── */
+  d1:   [700, 295],
+  d1r1: [440, 210],   // 平台   — left column top
+  d1r2: [440, 320],   // 代理   — left column mid
+  d1r3: [700, 188],   // DJI销售 — above dim
+  d1r4: [870, 188],   // GTM    — right of DJI sales
 
-  // ── D3 策略优化  lower-right cluster ──
-  d3:   [980, 510],   // dim node  (was 1060,530)
-  d3r1: [1200, 498],  // 平台
-  d3r2: [1200, 600],  // 电商
-  d3r3: [1200, 700],  // 代理
+  /* ─── D2 数据监控  (right, 0°) ─── */
+  d2:   [1310, 390],
+  d2r1: [1530, 300],  // 平台
+  d2r2: [1530, 400],  // 电商
+  d2r3: [1530, 500],  // 代理
 
-  // ── D4 周会机制  upper-right cluster ──
-  d4:   [980, 222],   // dim node  (was 1060,185)
-  d4r1: [1160, 138],  // GTM+电商
-  d4r2: [1330, 138],  // 销售
-  d4r3: [1245, 248],  // GTM+电商+销售
+  /* ─── D3 策略优化  (lower-right, ~45°) ─── */
+  d3:   [1280, 580],
+  d3r1: [1530, 580],  // 平台
+  d3r2: [1530, 680],  // 电商
+  d3r3: [1530, 778],  // 代理
 
-  // ── D5 日常巡检  left cluster ──
-  d5:   [580, 510],   // dim node  (was 490,530)
-  d5r1: [375, 462],   // 电商
-  d5r2: [375, 558],   // 销售
+  /* ─── D4 周会机制  (upper-right, ~-45°) ─── */
+  d4:   [1280, 270],
+  d4r1: [1480, 188],  // GTM+电商
+  d4r2: [1700, 188],  // 销售
+  d4r3: [1590, 310],  // GTM+电商+销售
 
-  // ── D6 大促日历  lower-left cluster ──
-  d6:   [580, 648],   // dim node  (was 490,680)
-  d6r1: [375, 648],   // 平台
+  /* ─── D5 日常巡检  (left, 180°) ─── */
+  d5:   [690, 480],
+  d5r1: [460, 430],   // 电商
+  d5r2: [460, 530],   // 销售
 
-  // ── D7 年框敲定  top-center cluster ──
-  d7:   [800, 188],   // dim node  (was 800,148)
-  d7r1: [628, 102],   // GTM+MKT
-  d7r2: [800,  92],   // 平台
-  d7r3: [972, 102],   // 电商+MKT+代理
+  /* ─── D6 大促日历  (lower-left, ~135°) ─── */
+  d6:   [700, 630],
+  d6r1: [460, 630],   // 平台
 
-  // ── D8 组织/节奏  bottom ──
-  d8h:  [CX, 770],    // dim8 header  (was 790)
-  tl:   [CX, 850],    // timeline center (was 870)
+  /* ─── D7 年框敲定  (top, -90°) ─── */
+  d7:   [1000, 218],
+  d7r1: [760,  118],  // GTM+MKT
+  d7r2: [1000, 118],  // 平台
+  d7r3: [1240, 118],  // 电商+MKT+代理
+
+  /* ─── D8 组织/节奏  (bottom) ─── */
+  d8h: [CX, 800],
+  tl:  [CX, 900],
 };
 
-/* Place all elements */
+/* ── PLACE ALL ELEMENTS ── */
 function place() {
-  for (const [id, [lx, ly]] of Object.entries(POS)) {
+  for (const [id,[x,y]] of Object.entries(P)) {
     const el = document.getElementById(id);
-    if (!el) continue;
-    el.style.left = lx + 'px';
-    el.style.top  = ly + 'px';
+    if (el) { el.style.left=x+'px'; el.style.top=y+'px'; }
   }
-
-  // Timeline: centered at tl.x, fixed y
+  // timeline: centered, full width
   const tl = document.getElementById('tl');
   if (tl) {
-    tl.style.left = POS.tl[0] + 'px';
-    tl.style.top  = POS.tl[1] + 'px';
+    tl.style.left  = P.tl[0]+'px';
+    tl.style.top   = P.tl[1]+'px';
     tl.style.transform = 'translateX(-50%)';
-    tl.style.width = '1400px';
+    tl.style.width = '1560px';
   }
 }
 
-/* ══════════════════════════════
-   SVG CONNECTOR DRAWING
-══════════════════════════════ */
-function px(id) {
-  // Return center coords from POS table (canvas coords)
-  return POS[id] ? { x: POS[id][0], y: POS[id][1] } : null;
+/* ── SCALE STAGE TO VIEWPORT ── */
+function scale() {
+  const s = document.getElementById('stage');
+  const W=2000, H=1120;
+  const vw=innerWidth, vh=innerHeight;
+  const sc = Math.min(vw/W, vh/H);
+  s.style.transformOrigin = 'top left';
+  s.style.transform = `scale(${sc})`;
+  s.style.left = ((vw - W*sc)/2)+'px';
+  s.style.top  = ((vh - H*sc)/2)+'px';
+  s.style.position = 'absolute';
 }
 
-function gb(id) {
-  const el = document.getElementById(id);
-  return el ? el.getBoundingClientRect() : null;
+/* ── SVG LINES ── */
+const SVG = ()=> document.getElementById('L');
+
+function el_sz(id) {
+  const e = document.getElementById(id);
+  return e ? {w:e.offsetWidth, h:e.offsetHeight} : {w:0,h:0};
 }
+function hw(id){ return el_sz(id).w/2; }
+function hh(id){ return el_sz(id).h/2; }
+function pp(id){ return P[id] ? {x:P[id][0],y:P[id][1]} : null; }
 
-// Get element dimensions from live DOM (after place())
-function sz(id) {
-  const el = document.getElementById(id);
-  return el ? { w: el.offsetWidth, h: el.offsetHeight } : { w: 0, h: 0 };
-}
-
-function svg() { return document.getElementById('lines'); }
-
-function line(x1,y1,x2,y2, stroke, opacity) {
-  const l = document.createElementNS('http://www.w3.org/2000/svg','line');
+function addLine(x1,y1,x2,y2,col,op){
+  const l=document.createElementNS('http://www.w3.org/2000/svg','line');
   l.setAttribute('x1',x1);l.setAttribute('y1',y1);l.setAttribute('x2',x2);l.setAttribute('y2',y2);
-  l.setAttribute('style',`stroke:${stroke};stroke-width:1;opacity:${opacity||0.8};fill:none`);
-  svg().appendChild(l);
+  l.setAttribute('style',`stroke:${col};stroke-width:1;opacity:${op||0.85};fill:none`);
+  SVG().appendChild(l);
+}
+function addPath(d,cls,mk){
+  const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+  p.setAttribute('d',d); p.setAttribute('class',cls);
+  if(mk) p.setAttribute('marker-end',`url(#${mk})`);
+  SVG().appendChild(p);
+}
+function crv(x1,y1,x2,y2,cls,mk){
+  const dx=(x2-x1)*0.42;
+  addPath(`M${x1},${y1} C${x1+dx},${y1} ${x2-dx},${y2} ${x2},${y2}`,cls,mk);
 }
 
-function path(d, cls, marker) {
-  const p = document.createElementNS('http://www.w3.org/2000/svg','path');
-  p.setAttribute('d', d);
-  p.setAttribute('class', cls);
-  if (marker) p.setAttribute('marker-end', `url(#${marker})`);
-  svg().appendChild(p);
-}
-
-function curve(x1,y1,x2,y2, cls, marker) {
-  const dx = (x2-x1)*0.42;
-  path(`M${x1},${y1} C${x1+dx},${y1} ${x2-dx},${y2} ${x2},${y2}`, cls, marker);
-}
-
-const DCOL = {
-  d1:'rgba(0,229,160,0.2)', d2:'rgba(0,180,216,0.2)', d3:'rgba(245,197,24,0.2)',
-  d4:'rgba(255,107,53,0.2)',d5:'rgba(199,125,255,0.2)',d6:'rgba(255,110,180,0.2)',
-  d7:'rgba(0,212,200,0.2)', d8:'rgba(168,224,99,0.2)',
+const DC={
+  d1:'rgba(0,229,160,0.22)',  d2:'rgba(0,180,216,0.22)',  d3:'rgba(245,197,24,0.22)',
+  d4:'rgba(255,107,53,0.22)', d5:'rgba(199,125,255,0.22)',d6:'rgba(255,110,180,0.22)',
+  d7:'rgba(0,212,200,0.22)',  d8:'rgba(168,224,99,0.22)',
 };
 
 function draw() {
-  // Clear old dynamic elements
-  const s = svg();
+  const s=SVG();
   [...s.children].filter(c=>c.tagName!=='defs').forEach(k=>k.remove());
 
-  const CR = 60; // center circle radius
+  const CR=64; // center radius px
 
-  // Precompute half-sizes
-  function hw(id) { return (sz(id).w||0)/2; }
-  function hh(id) { return (sz(id).h||0)/2; }
-
-  // Center → dim connectors
+  // Center → dims
   ['d1','d2','d3','d4','d5','d6','d7'].forEach(id=>{
-    const d = px(id), c = px('ctr');
+    const d=pp(id), c=pp('ctr');
     const dx=d.x-c.x, dy=d.y-c.y, len=Math.hypot(dx,dy);
-    line(
+    addLine(
       c.x+dx/len*CR, c.y+dy/len*CR,
-      d.x-dx/len*(hw(id)+4), d.y-dy/len*(hh(id)+4),
-      DCOL[id], 0.9
+      d.x-dx/len*(hw(id)+5), d.y-dy/len*(hh(id)+4),
+      DC[id], 0.9
     );
   });
-
-  // Center → d8h
-  const d8 = px('d8h'), c = px('ctr');
-  line(c.x, c.y+CR, d8.x, d8.y-hh('d8h')-2, DCOL['d8'], 0.9);
+  // Center → d8h (straight down)
+  { const d=pp('d8h'), c=pp('ctr');
+    addLine(c.x, c.y+CR, d.x, d.y-hh('d8h')-3, DC.d8, 0.9); }
 
   // Dim → role connectors
-  const dimRoles = {
+  const DR={
     d1:['d1r1','d1r2','d1r3','d1r4'],
     d2:['d2r1','d2r2','d2r3'],
     d3:['d3r1','d3r2','d3r3'],
@@ -529,70 +475,45 @@ function draw() {
     d6:['d6r1'],
     d7:['d7r1','d7r2','d7r3'],
   };
-
-  for (const [dim, roles] of Object.entries(dimRoles)) {
-    const d = px(dim);
-    roles.forEach(rid => {
-      const r = px(rid);
-      line(d.x, d.y, r.x, r.y, DCOL[dim], 0.65);
-    });
+  for (const [dim,roles] of Object.entries(DR)) {
+    const d=pp(dim);
+    roles.forEach(rid=>{ const r=pp(rid); addLine(d.x,d.y,r.x,r.y,DC[dim],0.55); });
   }
 
   /* ── D1 货源 flow arrows ── */
-  // Fwd: 平台(d1r1) → 销售(d1r3): right edge → left edge
-  { const a=px('d1r1'), b=px('d1r3');
-    curve(a.x+hw('d1r1'), a.y, b.x-hw('d1r3'), b.y, 'flow-fwd', 'mf'); }
-  // Fwd: 销售(d1r3) → GTM(d1r4)
-  { const a=px('d1r3'), b=px('d1r4');
-    curve(a.x+hw('d1r3'), a.y, b.x-hw('d1r4'), b.y, 'flow-fwd', 'mf'); }
-  // Rev: GTM(d1r4) → 代理(d1r2): arc down-left
-  { const a=px('d1r4'), b=px('d1r2');
-    path(`M${a.x},${a.y+hh('d1r4')} C${a.x},${a.y+80} ${b.x+hw('d1r2')+50},${b.y} ${b.x+hw('d1r2')},${b.y}`,
+  // Fwd: 平台→DJI销售→GTM
+  { const a=pp('d1r1'), b=pp('d1r3');
+    crv(a.x+hw('d1r1'), a.y, b.x-hw('d1r3'), b.y, 'flow-fwd','mf'); }
+  { const a=pp('d1r3'), b=pp('d1r4');
+    crv(a.x+hw('d1r3'), a.y, b.x-hw('d1r4'), b.y, 'flow-fwd','mf'); }
+  // Rev: GTM→代理
+  { const a=pp('d1r4'), b=pp('d1r2');
+    addPath(`M${a.x},${a.y+hh('d1r4')+4} C${a.x-60},${a.y+90} ${b.x+hw('d1r2')+60},${b.y} ${b.x+hw('d1r2')},${b.y}`,
       'flow-rev','mr'); }
 
   /* ── D2 数据监控 flow arrows ── */
-  // Fwd: 平台→电商→代理 (vertical left edge)
-  { const a=px('d2r1'),b=px('d2r2'),c2=px('d2r3'), lx=POS.d2r1[0]-hw('d2r1')-10;
-    path(`M${lx},${a.y+hh('d2r1')} L${lx},${b.y-hh('d2r2')}`, 'flow-fwd','mf');
-    path(`M${lx},${b.y+hh('d2r2')} L${lx},${c2.y-hh('d2r3')}`, 'flow-fwd','mf'); }
-  // Rev: 代理→平台 (right side loop)
-  { const a=px('d2r3'),b=px('d2r1'), rx=POS.d2r3[0]+hw('d2r3')+14;
-    path(`M${rx},${a.y} C${rx+32},${a.y} ${rx+32},${b.y} ${b.x+hw('d2r1')},${b.y}`, 'flow-rev','mr'); }
+  // Fwd: top-down along left edge
+  { const lx=P.d2r1[0]-hw('d2r1')-10;
+    addPath(`M${lx},${P.d2r1[1]+hh('d2r1')} L${lx},${P.d2r2[1]-hh('d2r2')}`, 'flow-fwd','mf');
+    addPath(`M${lx},${P.d2r2[1]+hh('d2r2')} L${lx},${P.d2r3[1]-hh('d2r3')}`, 'flow-fwd','mf'); }
+  // Rev: loop on right edge
+  { const rx=P.d2r3[0]+hw('d2r3')+12;
+    addPath(`M${rx},${P.d2r3[1]} C${rx+36},${P.d2r3[1]} ${rx+36},${P.d2r1[1]} ${P.d2r1[0]+hw('d2r1')},${P.d2r1[1]}`,
+      'flow-rev','mr'); }
 
   /* ── D3 策略优化 flow arrows ── */
-  // Fwd: 平台→电商→代理 (vertical right edge)
-  { const a=px('d3r1'),b=px('d3r2'),c2=px('d3r3'), rx=POS.d3r1[0]+hw('d3r1')+10;
-    path(`M${rx},${a.y+hh('d3r1')} L${rx},${b.y-hh('d3r2')}`, 'flow-fwd','mf');
-    path(`M${rx},${b.y+hh('d3r2')} L${rx},${c2.y-hh('d3r3')}`, 'flow-fwd','mf'); }
-  // Rev: 电商→平台 (left side)
-  { const a=px('d3r2'),b=px('d3r1'), lx=POS.d3r2[0]-hw('d3r2')-12;
-    path(`M${lx},${a.y} C${lx-32},${a.y} ${lx-32},${b.y} ${b.x-hw('d3r1')},${b.y}`, 'flow-rev','mr'); }
+  // Fwd: top-down right edge
+  { const lx=P.d3r1[0]-hw('d3r1')-10;
+    addPath(`M${lx},${P.d3r1[1]+hh('d3r1')} L${lx},${P.d3r2[1]-hh('d3r2')}`, 'flow-fwd','mf');
+    addPath(`M${lx},${P.d3r2[1]+hh('d3r2')} L${lx},${P.d3r3[1]-hh('d3r3')}`, 'flow-fwd','mf'); }
+  // Rev: loop left edge
+  { const lx=P.d3r2[0]-hw('d3r2')-14;
+    addPath(`M${lx},${P.d3r2[1]} C${lx-36},${P.d3r2[1]} ${lx-36},${P.d3r1[1]} ${P.d3r1[0]-hw('d3r1')},${P.d3r1[1]}`,
+      'flow-rev','mr'); }
 }
 
-/* ══════════════════════════════
-   SCALE TO FIT VIEWPORT
-══════════════════════════════ */
-function scaleStage() {
-  const stage = document.getElementById('stage');
-  const sw = 1600, sh = 940;
-  const vw = window.innerWidth, vh = window.innerHeight;
-  const scale = Math.min(vw/sw, vh/sh);
-  stage.style.transform = `scale(${scale})`;
-  // Adjust wrap so stage is centered
-  const wrap = document.getElementById('stage-wrap');
-  wrap.style.width  = vw+'px';
-  wrap.style.height = vh+'px';
-  // origin top-left, offset to center
-  stage.style.transformOrigin = 'top left';
-  stage.style.position = 'absolute';
-  stage.style.left = ((vw - sw*scale)/2)+'px';
-  stage.style.top  = ((vh - sh*scale)/2)+'px';
-}
-
-/* ══════════════════════════════
-   TOOLTIP DATA
-══════════════════════════════ */
-const TIPS = {
+/* ── TOOLTIP DATA ── */
+const TIPS={
   d1:{title:'01 · 货源管理',
     roles:[{c:'var(--rp)',n:'平台',d:'根据进销存报未来三月预测'},{c:'var(--ra)',n:'代理',d:'承接资金物流平台，确保货款'},{c:'var(--rs)',n:'DJI 销售',d:'与 GTM/产销锁预测中的货量'},{c:'var(--rg)',n:'GTM',d:'与产销根据 Otto 货量进行产能预警，判断断货节奏，提前与销售沟通'}],
     flows:[{t:'fwd',tx:'代理提报 → 销售/电商传达 → GTM 与产销产能对接'},{t:'rev',tx:'GTM 判断断货风险 → 传达电商 & 销售'}]},
@@ -619,28 +540,22 @@ const TIPS = {
     flows:[{t:'fwd',tx:'市场洞察 → 品牌定位 → 选品/定价 → 内容种草 → 流量收割 → 履约交付 → 用户留存 → 数据复盘'}]},
 };
 
-function showTip(e, key) {
+function T(e,key){
   e.stopPropagation();
-  const d = TIPS[key];
-  const el = document.getElementById('tip');
-  const rH = d.roles.map(r=>`<div style="margin-bottom:3px"><strong style="color:${r.c}">${r.n}</strong>：${r.d}</div>`).join('');
-  const fH = d.flows.map(f=>`<div style="margin-bottom:4px"><span class="badge ${f.t==='fwd'?'bf':'br'}">${f.t==='fwd'?'▶ 正向':'◀ 反向'}</span>${f.tx}</div>`).join('');
-  el.innerHTML = `<div class="tt">${d.title}</div><div class="ts"><div class="tl">角色职责</div>${rH}</div>${fH?`<div class="ts"><div class="tl">流程</div>${fH}</div>`:''}`;
-  const x=e.clientX+16, y=e.clientY-10;
-  el.style.left=Math.min(x,innerWidth-310)+'px';
-  el.style.top=Math.max(8,Math.min(y,innerHeight-240))+'px';
+  const d=TIPS[key], el=document.getElementById('tip');
+  const rH=d.roles.map(r=>`<div style="margin-bottom:3px"><strong style="color:${r.c}">${r.n}</strong>：${r.d}</div>`).join('');
+  const fH=d.flows.map(f=>`<div style="margin-bottom:4px"><span class="badge ${f.t==='fwd'?'bf':'br2'}">${f.t==='fwd'?'▶ 正向':'◀ 反向'}</span>${f.tx}</div>`).join('');
+  el.innerHTML=`<div class="tit">${d.title}</div><div class="tis"><div class="til">角色职责</div>${rH}</div>${fH?`<div class="tis"><div class="til">流程</div>${fH}</div>`:''}`;
+  el.style.left=Math.min(e.clientX+16,innerWidth-310)+'px';
+  el.style.top=Math.max(8,Math.min(e.clientY-10,innerHeight-240))+'px';
   el.classList.add('show');
 }
 document.addEventListener('click',()=>document.getElementById('tip').classList.remove('show'));
 
-/* ══ INIT ══ */
-function render() {
-  scaleStage();
-  place();
-  requestAnimationFrame(draw);
+function render(){
+  scale(); place(); requestAnimationFrame(draw);
 }
-
-window.addEventListener('load', ()=>{ render(); setTimeout(draw, 150); });
+window.addEventListener('load',()=>{ render(); setTimeout(draw,160); });
 window.addEventListener('resize', render);
 </script>
 </body>
